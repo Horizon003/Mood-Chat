@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Lock zoom for app-like feel; media viewer re-enables locally -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b141a" />
+  <meta name="description" content="MoodChat — real-time chat, calls, status, doodles & multiplayer games." />
+  <title>MoodChat</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- ============ SPLASH ============ -->
+  <div id="splash" class="splash">
+    <div class="splash-logo"><i class="fa-solid fa-comment-dots"></i></div>
+    <h1>MoodChat</h1>
+    <div class="spinner"></div>
+  </div>
+
+  <!-- ============ AUTH ============ -->
+  <section id="auth-screen" class="auth-screen hidden">
+    <div class="auth-card">
+      <div class="auth-brand"><i class="fa-solid fa-comment-dots"></i> MoodChat</div>
+      <p class="auth-sub">Sign in with your email — we'll send you a one-time code.</p>
+
+      <form id="email-form" class="auth-form">
+        <label>Email address</label>
+        <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email" required />
+        <label class="remember">
+          <input type="checkbox" id="remember-me" checked />
+          <span>Keep me signed in</span>
+        </label>
+        <button type="submit" class="btn-primary" id="send-otp-btn">
+          <span>Send code</span>
+        </button>
+      </form>
+
+      <form id="otp-form" class="auth-form hidden">
+        <label>Enter the 6-digit code sent to <b id="otp-email-label"></b></label>
+        <input type="text" id="auth-otp" inputmode="numeric" maxlength="6" placeholder="••••••" class="otp-input" />
+        <button type="submit" class="btn-primary" id="verify-otp-btn"><span>Verify & continue</span></button>
+        <button type="button" class="btn-link" id="otp-back">Use a different email</button>
+        <button type="button" class="btn-link" id="otp-resend">Resend code</button>
+      </form>
+
+      <div id="auth-error" class="auth-error"></div>
+    </div>
+  </section>
+
+  <!-- ============ PROFILE SETUP ============ -->
+  <section id="profile-setup" class="auth-screen hidden">
+    <div class="auth-card">
+      <div class="auth-brand"><i class="fa-solid fa-user-pen"></i> Set up profile</div>
+      <div class="dp-uploader">
+        <label for="setup-dp-input" class="dp-circle" id="setup-dp-preview">
+          <i class="fa-solid fa-camera"></i>
+        </label>
+        <input type="file" id="setup-dp-input" accept="image/*" hidden />
+        <small id="setup-dp-status"></small>
+      </div>
+      <form id="profile-form" class="auth-form">
+        <label>Your name</label>
+        <input type="text" id="setup-name" placeholder="Display name" required />
+        <label>About</label>
+        <input type="text" id="setup-about" placeholder="Hey there! I'm using MoodChat" />
+        <button type="submit" class="btn-primary" id="save-profile-btn"><span>Continue</span></button>
+      </form>
+      <div id="setup-error" class="auth-error"></div>
+    </div>
+  </section>
+
+  <!-- ============ MAIN APP ============ -->
+  <main id="app" class="app hidden">
+    <!-- Sidebar / left panel -->
+    <aside class="sidebar" id="sidebar">
+      <header class="sidebar-header">
+        <div class="me-chip" id="me-chip">
+          <img id="me-avatar" class="avatar" alt="me" />
+          <span id="me-name">MoodChat</span>
+        </div>
+        <div class="sidebar-actions">
+          <button class="icon-btn" id="new-status-btn" title="Add status"><i class="fa-solid fa-circle-plus"></i></button>
+          <button class="icon-btn" id="new-chat-btn" title="New chat"><i class="fa-solid fa-pen-to-square"></i></button>
+          <button class="icon-btn" id="menu-btn" title="Menu"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+          <div class="dropdown hidden" id="main-menu">
+            <button data-action="new-group"><i class="fa-solid fa-users"></i> New group</button>
+            <button data-action="games"><i class="fa-solid fa-gamepad"></i> Games</button>
+            <button data-action="profile"><i class="fa-solid fa-user"></i> Profile</button>
+            <button data-action="logout"><i class="fa-solid fa-right-from-bracket"></i> Log out</button>
+          </div>
+        </div>
+      </header>
+
+      <nav class="tabs">
+        <button class="tab active" data-tab="chats"><i class="fa-solid fa-comment"></i> Chats</button>
+        <button class="tab" data-tab="status"><i class="fa-solid fa-circle-notch"></i> Status</button>
+        <button class="tab" data-tab="calls"><i class="fa-solid fa-phone"></i> Calls</button>
+        <button class="tab" data-tab="games"><i class="fa-solid fa-gamepad"></i> Games</button>
+      </nav>
+
+      <div class="search-bar">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="search-input" placeholder="Search or start new chat" />
+      </div>
+
+      <!-- Tab panels -->
+      <div class="panel active" id="panel-chats">
+        <ul class="chat-list" id="chat-list"></ul>
+        <div class="empty-state hidden" id="chats-empty">
+          <i class="fa-regular fa-comments"></i>
+          <p>No chats yet</p>
+          <button class="btn-primary sm" id="empty-new-chat">Start a chat</button>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-status">
+        <div class="status-myrow" id="status-myrow">
+          <div class="status-ring add"><img id="status-my-avatar" class="avatar" alt="" /><span class="status-add"><i class="fa-solid fa-plus"></i></span></div>
+          <div><b>My status</b><div class="muted" id="status-my-sub">Tap to add status update</div></div>
+        </div>
+        <h4 class="list-label">Recent updates</h4>
+        <ul class="status-list" id="status-list"></ul>
+        <div class="empty-state hidden" id="status-empty"><i class="fa-regular fa-circle"></i><p>No recent updates</p></div>
+      </div>
+
+      <div class="panel" id="panel-calls">
+        <ul class="call-list" id="call-list"></ul>
+        <div class="empty-state" id="calls-empty"><i class="fa-solid fa-phone-slash"></i><p>No recent calls</p></div>
+      </div>
+
+      <div class="panel" id="panel-games">
+        <div class="games-grid" id="games-grid"></div>
+      </div>
+    </aside>
+
+    <!-- Conversation / right panel -->
+    <section class="conversation" id="conversation">
+      <div class="conv-placeholder" id="conv-placeholder">
+        <i class="fa-solid fa-comment-dots"></i>
+        <h2>MoodChat</h2>
+        <p>Select a chat to start messaging. End-to-end your mood, your way.</p>
+      </div>
+
+      <div class="conv-active hidden" id="conv-active">
+        <header class="conv-header">
+          <button class="icon-btn back-btn" id="conv-back"><i class="fa-solid fa-arrow-left"></i></button>
+          <img class="avatar" id="conv-avatar" alt="" />
+          <div class="conv-meta" id="conv-open-info">
+            <b id="conv-title">Chat</b>
+            <small id="conv-sub">online</small>
+          </div>
+          <div class="conv-actions">
+            <button class="icon-btn" id="call-voice" title="Voice call"><i class="fa-solid fa-phone"></i></button>
+            <button class="icon-btn" id="call-video" title="Video call"><i class="fa-solid fa-video"></i></button>
+            <button class="icon-btn" id="conv-menu-btn" title="Menu"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+            <div class="dropdown hidden" id="conv-menu">
+              <button data-action="view-info"><i class="fa-solid fa-circle-info"></i> View info</button>
+              <button data-action="clear"><i class="fa-solid fa-broom"></i> Clear messages (local)</button>
+            </div>
+          </div>
+        </header>
+
+        <div class="messages" id="messages"></div>
+        <div class="typing-bar hidden" id="typing-bar"></div>
+
+        <footer class="composer">
+          <div class="composer-attach">
+            <button class="icon-btn" id="attach-btn" title="Attach"><i class="fa-solid fa-paperclip"></i></button>
+            <div class="attach-menu hidden" id="attach-menu">
+              <button data-attach="image"><i class="fa-solid fa-image"></i> Photo</button>
+              <button data-attach="video"><i class="fa-solid fa-film"></i> Video</button>
+              <button data-attach="doodle"><i class="fa-solid fa-paintbrush"></i> Doodle</button>
+              <button data-attach="sticker"><i class="fa-solid fa-face-laugh"></i> Sticker</button>
+            </div>
+          </div>
+          <input type="file" id="file-image" accept="image/*" hidden />
+          <input type="file" id="file-video" accept="video/*" hidden />
+          <button class="icon-btn" id="emoji-btn" title="Emoji"><i class="fa-regular fa-face-smile"></i></button>
+          <textarea id="msg-input" rows="1" placeholder="Type a message"></textarea>
+          <button class="icon-btn send-btn" id="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+        </footer>
+        <div class="upload-progress hidden" id="upload-progress"><div class="bar"></div><span></span></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ MODALS ============ -->
+  <div class="modal-root hidden" id="modal-root"></div>
+
+  <!-- Media viewer (zoom enabled here only) -->
+  <div class="media-viewer hidden" id="media-viewer">
+    <button class="icon-btn viewer-close" id="viewer-close"><i class="fa-solid fa-xmark"></i></button>
+    <div class="viewer-content" id="viewer-content"></div>
+  </div>
+
+  <!-- Toasts -->
+  <div class="toast-host" id="toast-host"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
