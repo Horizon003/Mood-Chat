@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>MOODCHAT — Express Every Mood</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
+<style>
+:root{
+  --bg:#05080a;
+  --app-bg:#0a1014;
+  --surface:#0f171c;
+  --surface-2:#141d23;
+  --surface-3:#1a242b;
+  --text:#e6eef3;
+  --muted:#8b9aa3;
+  --muted-2:#5e6c74;
+  --accent:#25d366;
+  --accent-2:#4ff07f;
+  --accent-deep:#1faa52;
+  --bubble-out:#103b27;
+  --bubble-out2:#0c5132;
+  --bubble-in:#1a242b;
+  --danger:#ff5d5d;
+  --border:#212d34;
+  --glow:rgba(37,211,102,.35);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:
+    radial-gradient(1200px 600px at 15% 0%, rgba(37,211,102,.10), transparent 55%),
+    radial-gradient(900px 500px at 90% 100%, rgba(37,211,102,.08), transparent 55%),
+    #05080a;
+  color:var(--text);
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;
+  overflow:hidden;
+}
+
+/* ---------- Phone frame ---------- */
+.phone{
+  position:relative;
+  width:390px;height:844px;
+  max-height:96vh;
+  background:#000;
+  border-radius:54px;
+  padding:11px;
+  box-shadow:0 0 0 2px #1d272d, 0 40px 90px rgba(0,0,0,.7), 0 0 80px rgba(37,211,102,.06);
+}
+.phone-screen{
+  position:relative;
+  width:100%;height:100%;
+  background:var(--app-bg);
+  border-radius:44px;
+  overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.notch{
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);
+  width:120px;height:30px;background:#000;border-radius:18px;z-index:200;
+}
+.notch::after{content:"";position:absolute;right:18px;top:9px;width:11px;height:11px;border-radius:50%;background:#0b1f17;box-shadow:inset 0 0 0 2px #1a3a2a}
+
+/* status bar */
+.statusbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 26px 4px;font-size:14px;font-weight:600;color:var(--text);
+  flex-shrink:0;
+}
+.statusbar .right i{margin-left:6px;font-size:13px}
+
+/* screens */
+.screen{position:absolute;inset:0;display:none;flex-direction:column;background:var(--app-bg)}
+.screen.active{display:flex;animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+.screen-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.screen-body::-webkit-scrollbar{width:0}
+
+/* generic header */
+.app-header{display:flex;align-items:center;gap:14px;padding:6px 18px 12px;flex-shrink:0}
+.app-header .back{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:50%;color:var(--text);font-size:18px;cursor:pointer}
+.app-header .back:active{background:var(--surface-2)}
+.app-header h2{font-size:19px;margin:0;font-weight:700;flex:1}
+.app-header .h-actions{display:flex;gap:6px}
+.app-header .h-actions i{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;color:var(--text);cursor:pointer}
+.app-header .h-actions i:active{background:var(--surface-2)}
+
+/* buttons */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;padding:15px;border:none;border-radius:14px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-deep));
+  color:#04150c;font-weight:700;font-size:15px;cursor:pointer;
+  box-shadow:0 8px 24px rgba(37,211,102,.32);
+}
+.btn:active{transform:scale(.985)}
+.btn-ghost{background:var(--surface-2);color:var(--text);box-shadow:none;border:1px solid var(--border)}
+
+/* logo */
+.logo-mark{
+  width:64px;height:64px;border-radius:18px;display:inline-flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,rgba(37,211,102,.18),rgba(37,211,102,.04));
+  border:1px solid rgba(79,240,127,.3);color:var(--accent-2);font-size:30px;
+}
+
+/* ---------- Splash ---------- */
+#splash{background:radial-gradient(120% 80% at 50% 100%, rgba(37,211,102,.30), transparent 60%),#05090b;align-items:center;justify-content:center;text-align:center}
+#splash .splash-inner{margin:auto;display:flex;flex-direction:column;align-items:center;gap:18px;padding:30px;animation:floatUp .8s ease}
+@keyframes floatUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+#splash .big-logo{width:110px;height:110px;border-radius:32px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(37,211,102,.2),rgba(37,211,102,.03));border:1px solid rgba(79,240,127,.35);color:var(--accent-2);font-size:54px;box-shadow:0 0 60px rgba(37,211,102,.35)}
+#splash .brand{font-size:38px;font-weight:800;letter-spacing:1px}
+#splash .brand .b{color:var(--accent-2)}
+#splash .tag{color:var(--accent-2);font-weight:600;letter-spacing:2px;font-size:13px;text-transform:uppercase}
+.splash-glow{position:absolute;bottom:-40px;left:50%;transform:translateX(-50%);width:280px;height:160px;background:radial-gradient(circle,rgba(37,211,102,.5),transparent 70%);filter:blur(20px)}
+
+/* ---------- forms ---------- */
+.title-block{padding:6px 22px 14px;text-align:center}
+.title-block h1{font-size:24px;margin:0 0 8px;font-weight:700}
+.title-block p{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.title-block .accent{color:var(--accent-2);font-weight:600}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px;margin:8px 18px}
+.field-label{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:8px}
+.input-row{display:flex;gap:10px}
+.cc{display:flex;align-items:center;gap:8px;padding:14px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;font-weight:600;cursor:pointer}
+.text-input{flex:1;padding:14px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:15px;outline:none;font-family:inherit}
+.text-input:focus{border-color:var(--accent)}
+.hint{font-size:12px;color:var(--muted);margin:10px 2px}
+.privacy-note{display:flex;gap:10px;align-items:flex-start;color:var(--muted);font-size:12.5px;padding:0 24px;margin-top:14px;line-height:1.5}
+.privacy-note i{color:var(--accent);margin-top:2px}
+.legal{text-align:center;font-size:12px;color:var(--muted);padding:18px 30px}
+.legal a{color:var(--accent-2);text-decoration:none}
+
+/* OTP */
+.otp-row{display:flex;justify-content:space-between;gap:8px;margin:6px 0}
+.otp-box{width:46px;height:54px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);text-align:center;font-size:22px;font-weight:700;outline:none}
+.otp-box:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,211,102,.18)}
+.otp-box.filled{border-color:var(--accent);background:rgba(37,211,102,.08)}
+.resend{text-align:center;color:var(--muted);font-size:13px;margin:18px}
+.resend b{color:var(--accent-2)}
+
+/* avatar uploader */
+.avatar-up{position:relative;width:110px;height:110px;margin:10px auto;border-radius:50%;background:radial-gradient(circle at 50% 35%,rgba(79,240,127,.4),rgba(37,211,102,.05));display:flex;align-items:center;justify-content:center;border:1px solid rgba(79,240,127,.25)}
+.avatar-up i{font-size:30px;color:#cfeede}
+.avatar-up .plus{position:absolute;right:6px;bottom:6px;width:30px;height:30px;border-radius:50%;background:var(--accent);color:#04150c;display:flex;align-items:center;justify-content:center;border:3px solid var(--app-bg)}
+.float-field{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:9px 14px;margin:0 0 12px;display:flex;align-items:center;gap:10px}
+.float-field .ff-icon{color:var(--muted)}
+.float-field .ff-inner{flex:1}
+.float-field label{font-size:11px;color:var(--muted)}
+.float-field input,.float-field textarea{width:100%;background:none;border:none;color:var(--text);font-size:15px;outline:none;font-family:inherit;resize:none}
+
+/* ---------- Chats list ---------- */
+.home-top{display:flex;align-items:center;justify-content:space-between;padding:6px 20px 10px}
+.home-top .brand-sm{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:.5px}
+.home-top .brand-sm .logo-mini{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,rgba(37,211,102,.2),rgba(37,211,102,.04));border:1px solid rgba(79,240,127,.3);display:flex;align-items:center;justify-content:center;color:var(--accent-2);font-size:16px}
+.home-top .ht-actions i{margin-left:14px;font-size:18px;color:var(--text);cursor:pointer}
+.tabs{display:flex;gap:8px;padding:6px 18px 10px;overflow-x:auto}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:7px 16px;border-radius:20px;background:var(--surface-2);color:var(--muted);font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;border:1px solid transparent}
+.tab.active{background:linear-gradient(135deg,var(--accent),var(--accent-deep));color:#04150c}
+.section-label{display:flex;align-items:center;gap:8px;padding:12px 22px 6px;color:var(--muted);font-size:12.5px;font-weight:600}
+.section-label i{font-size:11px}
+
+.chat-item{display:flex;gap:13px;padding:11px 20px;cursor:pointer;align-items:center}
+.chat-item:active{background:var(--surface)}
+.avatar{width:50px;height:50px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--surface-3)}
+.avatar.ph{display:flex;align-items:center;justify-content:center;font-weight:700;color:#04150c;background:linear-gradient(135deg,var(--accent-2),var(--accent-deep))}
+.ci-main{flex:1;min-width:0}
+.ci-top{display:flex;justify-content:space-between;align-items:baseline}
+.ci-name{font-weight:600;font-size:15.5px}
+.ci-time{font-size:11.5px;color:var(--muted)}
+.ci-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:3px}
+.ci-msg{font-size:13.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:210px}
+.badge{background:var(--accent);color:#04150c;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 6px}
+.dot-green{width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent)}
+.mute-i{color:var(--muted-2);font-size:13px}
+
+/* request card */
+.req-card{margin:8px 18px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;position:relative}
+.req-card .close{position:absolute;right:14px;top:14px;color:var(--muted);cursor:pointer}
+.req-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.req-actions{display:flex;gap:10px}
+.req-actions .btn{padding:11px}
+
+/* empty state */
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;gap:14px}
+.empty .e-icon{width:90px;height:90px;border-radius:28px;background:radial-gradient(circle,rgba(37,211,102,.18),transparent 70%);display:flex;align-items:center;justify-content:center;color:var(--accent-2);font-size:40px;border:1px solid rgba(79,240,127,.2)}
+.empty h3{margin:0;font-size:20px}
+.empty p{margin:0;color:var(--muted);font-size:14px}
+
+.info-pill{display:flex;gap:10px;align-items:center;margin:14px 20px;padding:12px 14px;background:rgba(37,211,102,.07);border:1px solid rgba(37,211,102,.18);border-radius:12px;color:var(--muted);font-size:12.5px}
+.info-pill i{color:var(--accent)}
+
+/* bottom nav */
+.bottom-nav{display:flex;justify-content:space-around;padding:10px 6px 14px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);font-size:10.5px;cursor:pointer;flex:1}
+.nav-item i{font-size:19px}
+.nav-item.active{color:var(--accent-2)}
+.nav-item.active i{filter:drop-shadow(0 0 8px var(--glow))}
+
+/* ---------- Conversation ---------- */
+.conv-header{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.conv-header .back{color:var(--text);font-size:18px;cursor:pointer;padding:6px}
+.conv-header .avatar{width:40px;height:40px}
+.conv-header .ch-info{flex:1;min-width:0}
+.conv-header .ch-name{font-weight:600;font-size:15px}
+.conv-header .ch-sub{font-size:12px;color:var(--accent-2)}
+.conv-header .ch-actions i{margin-left:16px;font-size:18px;color:var(--text);cursor:pointer}
+.chat-bg{flex:1;overflow-y:auto;padding:14px 14px 6px;background:
+  radial-gradient(800px 400px at 80% 0%, rgba(37,211,102,.05), transparent 60%),
+  var(--app-bg)}
+.chat-bg::-webkit-scrollbar{width:0}
+.day-sep{text-align:center;margin:8px 0}
+.day-sep span{background:var(--surface-2);color:var(--muted);font-size:11.5px;padding:5px 12px;border-radius:10px}
+.msg{max-width:78%;padding:9px 12px;border-radius:14px;margin-bottom:8px;font-size:14px;line-height:1.45;position:relative;clear:both;word-wrap:break-word}
+.msg .meta{font-size:10px;color:var(--muted);margin-top:4px;text-align:right;display:flex;gap:4px;justify-content:flex-end;align-items:center}
+.msg .meta .tick{color:var(--accent-2)}
+.in{background:var(--bubble-in);float:left;border-top-left-radius:4px}
+.out{background:linear-gradient(135deg,var(--bubble-out),var(--bubble-out2));float:right;border-top-right-radius:4px}
+.msg .sender{font-size:12px;font-weight:700;color:var(--accent-2);margin-bottom:2px}
+.msg-img{display:block;width:220px;max-width:100%;border-radius:10px;margin-bottom:4px}
+.reactions{position:absolute;bottom:-12px;background:var(--surface-3);border:1px solid var(--border);border-radius:12px;padding:2px 7px;font-size:12px;display:flex;gap:3px;align-items:center}
+.reactions.r-out{right:6px}.reactions.r-in{left:6px}
+.voice-note{display:flex;align-items:center;gap:8px;width:200px}
+.voice-note .play{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#04150c;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.voice-wave{flex:1;height:24px;background:repeating-linear-gradient(90deg,var(--accent-2) 0 2px,transparent 2px 5px);opacity:.6;border-radius:4px;align-self:center}
+.speed{font-size:11px;background:var(--surface-3);padding:2px 6px;border-radius:8px}
+.typing-pill{float:left;background:var(--surface-2);border-radius:14px;padding:8px 12px;font-size:12px;color:var(--muted);margin-bottom:8px}
+
+.composer{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0}
+.composer .c-input{flex:1;display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:24px;padding:10px 14px}
+.composer .c-input input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:14px;font-family:inherit}
+.composer .c-input i{color:var(--muted);font-size:16px;cursor:pointer}
+.composer .mic{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-deep));color:#04150c;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0;box-shadow:0 6px 16px rgba(37,211,102,.35)}
+
+/* long-press menu */
+.lp-overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);z-index:300;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.lp-overlay.show{display:flex;animation:fade .2s}
+.lp-bubble{background:linear-gradient(135deg,var(--bubble-out),var(--bubble-out2));padding:10px 14px;border-radius:14px;max-width:70%;font-size:14px}
+.lp-menu{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;width:200px;overflow:hidden}
+.lp-menu .lp-i{display:flex;align-items:center;gap:14px;padding:13px 16px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--border)}
+.lp-menu .lp-i:last-child{border:none}
+.lp-menu .lp-i:active{background:var(--surface-3)}
+.lp-menu .lp-i.danger{color:var(--danger)}
+.lp-menu .lp-i i{width:18px;color:var(--muted)}
+.lp-menu .lp-i.danger i{color:var(--danger)}
+
+/* chat info */
+.profile-hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:14px 20px 18px}
+.profile-hero .avatar{width:96px;height:96px;margin-bottom:12px}
+.profile-hero h2{margin:0;font-size:22px}
+.profile-hero .uname{color:var(--accent-2);font-size:14px;margin:4px 0}
+.profile-hero .phone-no{color:var(--muted);font-size:14px}
+.quick-actions{display:flex;justify-content:center;gap:10px;padding:0 20px 16px}
+.qa{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center;cursor:pointer}
+.qa i{color:var(--accent-2);font-size:18px;display:block;margin-bottom:6px}
+.qa span{font-size:11.5px;color:var(--muted)}
+.list-row{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border);cursor:pointer}
+.list-row .lr-icon{width:22px;text-align:center;color:var(--muted)}
+.list-row .lr-main{flex:1}
+.list-row .lr-title{font-size:14.5px}
+.list-row .lr-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.list-row.danger .lr-title,.list-row.danger .lr-icon{color:var(--danger)}
+.media-strip{display:flex;gap:8px;padding:6px 20px 16px}
+.media-strip img,.media-strip .more{width:64px;height:64px;border-radius:12px;object-fit:cover}
+.media-strip .more{background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent-2);font-size:13px}
+
+/* toggle */
+.toggle{width:46px;height:27px;border-radius:14px;background:var(--surface-3);position:relative;cursor:pointer;flex-shrink:0;transition:.2s;border:1px solid var(--border)}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:21px;height:21px;border-radius:50%;background:#7d8a92;transition:.2s}
+.toggle.on{background:var(--accent)}
+.toggle.on::after{left:21px;background:#fff}
+
+/* ---------- Status ---------- */
+.status-row{display:flex;align-items:center;gap:13px;padding:12px 20px;cursor:pointer}
+.status-ring{width:56px;height:56px;border-radius:50%;padding:2.5px;background:conic-gradient(var(--accent-2),var(--accent),var(--accent-deep),var(--accent-2));flex-shrink:0}
+.status-ring.seen{background:var(--surface-3)}
+.status-ring img{width:100%;height:100%;border-radius:50%;border:2px solid var(--app-bg);object-fit:cover}
+.status-add{position:relative}
+.status-add .add{position:absolute;right:-2px;bottom:-2px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#04150c;display:flex;align-items:center;justify-content:center;border:2px solid var(--app-bg);font-size:11px}
+.recent-row{display:flex;gap:14px;padding:10px 20px;overflow-x:auto}
+.recent-row::-webkit-scrollbar{display:none}
+.recent-item{text-align:center;flex-shrink:0;cursor:pointer}
+.recent-item .status-ring{width:62px;height:62px;margin:0 auto 6px}
+.recent-item span{font-size:11px;color:var(--muted);display:block}
+
+/* status viewer */
+#statusViewer{background:#000}
+.sv-bars{display:flex;gap:4px;padding:14px 16px 8px}
+.sv-bar{flex:1;height:3px;background:rgba(255,255,255,.3);border-radius:3px;overflow:hidden}
+.sv-bar .fill{height:100%;width:0;background:#fff}
+.sv-bar.done .fill{width:100%}
+.sv-top{display:flex;align-items:center;gap:10px;padding:4px 16px}
+.sv-top .avatar{width:38px;height:38px}
+.sv-top .name{font-weight:600;font-size:14px}
+.sv-top .time{font-size:12px;color:rgba(255,255,255,.6)}
+.sv-canvas{flex:1;display:flex;align-items:center;justify-content:center;position:relative}
+.sv-canvas img{width:100%;height:100%;object-fit:cover;position:absolute}
+.sv-caption{position:relative;z-index:2;color:#fff;font-size:30px;font-weight:700;text-align:center;padding:20px;text-shadow:0 2px 20px rgba(0,0,0,.6)}
+.sv-react{display:flex;gap:10px;padding:14px 18px;justify-content:center}
+.sv-react span{font-size:24px;cursor:pointer}
+.sv-reply{display:flex;gap:10px;padding:10px 16px 18px;align-items:center}
+.sv-reply input{flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:24px;padding:12px 16px;color:#fff;outline:none}
+
+/* status composer */
+.seg{display:flex;background:var(--surface-2);border-radius:12px;padding:4px;margin:8px 18px}
+.seg .seg-i{flex:1;text-align:center;padding:9px;border-radius:9px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+.seg .seg-i.active{background:linear-gradient(135deg,var(--accent),var(--accent-deep));color:#04150c}
+.compose-canvas{margin:10px 18px;height:200px;border-radius:16px;background:linear-gradient(135deg,#0c5132,#1faa52);display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;font-size:20px;font-weight:600;position:relative;padding:20px}
+.color-row{display:flex;gap:10px;padding:8px 18px;flex-wrap:wrap}
+.color-dot{width:32px;height:32px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+.color-dot.sel{border-color:#fff}
+
+/* ---------- Calls ---------- */
+.call-item{display:flex;align-items:center;gap:13px;padding:11px 20px;cursor:pointer}
+.call-item .ci-main{flex:1}
+.call-meta{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-top:3px}
+.call-meta.missed{color:var(--danger)}
+.call-meta.incoming{color:var(--accent-2)}
+.call-item .info{color:var(--muted)}
+
+#callActive{background:radial-gradient(120% 70% at 50% 25%,rgba(37,211,102,.18),transparent 60%),#070b0d;align-items:center}
+.call-active-top{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;color:var(--accent-2);font-size:12px;font-weight:600}
+.call-avatar-big{width:150px;height:150px;border-radius:50%;margin:30px auto 18px;object-fit:cover;border:3px solid rgba(37,211,102,.4);box-shadow:0 0 60px rgba(37,211,102,.3)}
+.call-name-big{text-align:center;font-size:26px;font-weight:700}
+.call-timer{text-align:center;color:var(--accent-2);font-weight:600;margin-top:6px;font-size:16px}
+.call-quality{text-align:center;color:var(--muted);font-size:12px;margin-top:8px}
+.call-controls{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:30px 40px;margin-top:auto}
+.cc-btn{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:11px;color:var(--muted);cursor:pointer}
+.cc-btn .icon{width:60px;height:60px;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text)}
+.cc-btn.active .icon{background:var(--accent);color:#04150c}
+.end-call{width:64px;height:64px;border-radius:50%;background:var(--danger);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;margin:6px auto 30px;cursor:pointer}
+
+/* video call */
+#callVideo{background:#0b1410}
+.vid-remote{flex:1;background:linear-gradient(160deg,#1a2c22,#0b1410);position:relative;display:flex;align-items:center;justify-content:center}
+.vid-remote img{width:100%;height:100%;object-fit:cover}
+.vid-self{position:absolute;right:14px;top:80px;width:100px;height:140px;border-radius:14px;overflow:hidden;border:2px solid rgba(255,255,255,.2)}
+.vid-self img{width:100%;height:100%;object-fit:cover}
+.vid-top{position:absolute;top:14px;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:0 18px;z-index:5}
+.vid-controls{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:14px;background:rgba(10,16,20,.7);backdrop-filter:blur(10px);padding:12px 18px;border-radius:30px}
+.vid-controls .vc{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer}
+.vid-controls .vc.end{background:var(--danger)}
+.vid-controls .vc.on{background:var(--accent);color:#04150c}
+
+/* ---------- Games ---------- */
+.games-head{display:flex;align-items:center;justify-content:space-between;padding:6px 20px 4px}
+.lvl{background:var(--surface-2);border:1px solid rgba(79,240,127,.3);border-radius:16px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--accent-2)}
+.games-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:10px 18px}
+.game-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;text-align:center;cursor:pointer}
+.game-card:active{border-color:var(--accent)}
+.game-card .gc-icon{width:50px;height:50px;border-radius:14px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--accent-2);background:radial-gradient(circle,rgba(37,211,102,.18),transparent 70%)}
+.game-card .gc-name{font-weight:600;font-size:14.5px}
+.game-card .gc-sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+
+.ttt-players{display:flex;justify-content:space-around;padding:10px 20px 16px}
+.ttt-player{text-align:center}
+.ttt-player img{width:46px;height:46px;border-radius:50%;margin-bottom:4px}
+.ttt-player .pn{font-size:13px;font-weight:600}
+.ttt-player .turn{font-size:11px;color:var(--accent-2)}
+.ttt-board{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 30px}
+.ttt-cell{aspect-ratio:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:700;cursor:pointer}
+.ttt-cell.x{color:#7da3ff}
+.ttt-cell.o{color:var(--accent-2)}
+.ttt-cell.win{background:rgba(37,211,102,.18);box-shadow:0 0 20px rgba(37,211,102,.3)}
+.ttt-result{margin:18px 22px;background:linear-gradient(135deg,var(--bubble-out),var(--bubble-out2));border:1px solid rgba(79,240,127,.3);border-radius:14px;padding:14px;text-align:center;display:none}
+.ttt-result.show{display:block}
+.ttt-result h3{margin:0;color:var(--accent-2);font-size:18px}
+.ttt-result p{margin:4px 0 0;font-size:13px;color:var(--muted)}
+.ttt-foot{display:flex;gap:10px;padding:0 22px 14px}
+.ttt-foot .btn{padding:12px}
+
+/* ---------- Settings / themes ---------- */
+.settings-profile{display:flex;align-items:center;gap:13px;margin:8px 18px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:16px;cursor:pointer}
+.settings-profile .avatar{width:54px;height:54px}
+.settings-profile .sp-info{flex:1}
+.settings-profile .sp-name{font-weight:700;font-size:16px}
+.settings-profile .sp-user{color:var(--accent-2);font-size:13px}
+.settings-profile .sp-bio{color:var(--muted);font-size:12px;margin-top:2px}
+
+.themes-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 18px}
+.theme-card{border-radius:16px;padding:14px;text-align:center;cursor:pointer;border:2px solid transparent;position:relative;min-height:120px;display:flex;flex-direction:column;justify-content:space-between}
+.theme-card .tc-preview{height:60px;border-radius:10px;margin-bottom:8px;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:8px}
+.theme-card .tc-bubble{height:10px;border-radius:6px}
+.theme-card.sel{border-color:var(--accent);box-shadow:0 0 16px var(--glow)}
+.theme-card .tc-name{font-size:13px;font-weight:600}
+.theme-card .check{position:absolute;right:10px;top:10px;color:var(--accent);display:none}
+.theme-card.sel .check{display:block}
+
+/* security pin */
+#pinLock{background:radial-gradient(120% 70% at 50% 30%,rgba(37,211,102,.14),transparent 60%),#070b0d;align-items:center;text-align:center}
+.pin-lock-icon{width:70px;height:70px;border-radius:22px;margin:30px auto 14px;display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--accent-2);background:radial-gradient(circle,rgba(37,211,102,.2),transparent 70%);border:1px solid rgba(79,240,127,.3)}
+.pin-dots{display:flex;gap:14px;justify-content:center;margin:20px 0}
+.pin-dot{width:14px;height:14px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border)}
+.pin-dot.on{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:10px 40px;margin-top:auto}
+.key{width:64px;height:64px;border-radius:50%;background:var(--surface-2);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto;cursor:pointer;font-size:22px;font-weight:600}
+.key small{font-size:9px;color:var(--muted);letter-spacing:1px}
+.key.fn{background:none;font-size:18px}
+
+/* doodle */
+#doodleCanvas{background:#0a0e10}
+.doodle-tools{display:flex;justify-content:space-around;padding:12px;background:var(--surface);border-top:1px solid var(--border)}
+.dtool{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--muted);cursor:pointer}
+.dtool i{font-size:18px}
+.dtool.active{color:var(--accent-2)}
+.doodle-colors{display:flex;gap:8px;justify-content:center;padding:10px;background:var(--surface);flex-wrap:wrap}
+.dcolor{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+.dcolor.sel{border-color:#fff;transform:scale(1.1)}
+
+/* misc */
+.divider{height:1px;background:var(--border);margin:6px 20px}
+.fab{position:absolute;right:18px;bottom:80px;width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,var(--accent),var(--accent-deep));color:#04150c;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;box-shadow:0 10px 24px rgba(37,211,102,.4);z-index:50}
+.toast{position:absolute;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface-3);border:1px solid var(--border);color:var(--text);padding:11px 18px;border-radius:24px;font-size:13px;opacity:0;transition:.3s;z-index:400;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (max-width:430px){
+  body{background:#05080a}
+  .phone{width:100vw;height:100vh;max-height:100vh;border-radius:0;padding:0;box-shadow:none}
+  .phone-screen{border-radius:0}
+  .notch{display:none}
+  .statusbar{padding-top:8px}
+}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="phone-screen">
+    <div class="statusbar">
+      <span>9:41</span>
+      <span class="right"><i class="fa-solid fa-signal"></i><i class="fa-solid fa-wifi"></i><i class="fa-solid fa-battery-full"></i></span>
+    </div>
+
+    <!-- ============ SPLASH ============ -->
+    <section class="screen active" id="splash">
+      <div class="splash-inner">
+        <div class="big-logo"><i class="fa-solid fa-comment-dots"></i></div>
+        <div class="brand">MOOD<span class="b">CHAT</span></div>
+        <div class="tag">Express Every Mood</div>
+        <button class="btn" style="margin-top:24px;width:200px" onclick="go('login')">Get Started <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+      <div class="splash-glow"></div>
+    </section>
+
+    <!-- ============ LOGIN ============ -->
+    <section class="screen" id="login">
+      <div class="app-header"><span class="back" onclick="go('splash')"><i class="fa-solid fa-arrow-left"></i></span></div>
+      <div class="screen-body">
+        <div class="title-block">
+          <h1>Welcome back 👋</h1>
+          <p>Log in or sign up to continue<br>your private conversations.</p>
+        </div>
+        <div class="card">
+          <div class="field-label">Your phone number</div>
+          <div class="input-row">
+            <div class="cc">🇮🇳 +91 <i class="fa-solid fa-chevron-down" style="font-size:11px"></i></div>
+            <input class="text-input" type="tel" placeholder="Enter phone number" value="98765 43210">
+          </div>
+          <div class="hint">We'll send you a verification code.</div>
+          <button class="btn" onclick="go('otp')">Continue <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+        <div class="privacy-note"><i class="fa-solid fa-shield-halved"></i><span>Your number is safe with us. We never share your information.</span></div>
+        <div class="legal">By continuing, you agree to our <a href="#">Privacy Policy</a> and <a href="#">Terms of Service</a></div>
+      </div>
+    </section>
+
+    <!-- ============ OTP ============ -->
+    <section class="screen" id="otp">
+      <div class="app-header"><span class="back" onclick="go('login')"><i class="fa-solid fa-arrow-left"></i></span></div>
+      <div class="screen-body">
+        <div class="title-block">
+          <h1>Verify your number</h1>
+          <p>We've sent a 6-digit code to<br><span class="accent">+91 98765 43210</span></p>
+        </div>
+        <div class="card">
+          <div class="field-label">Enter 6-digit code</div>
+          <div class="otp-row" id="otpRow">
+            <input class="otp-box" maxlength="1" inputmode="numeric">
+            <input class="otp-box" maxlength="1" inputmode="numeric">
+            <input class="otp-box" maxlength="1" inputmode="numeric">
+            <input class="otp-box" maxlength="1" inputmode="numeric">
+            <input class="otp-box" maxlength="1" inputmode="numeric">
+            <input class="otp-box" maxlength="1" inputmode="numeric">
+          </div>
+          <div class="privacy-note" style="padding:12px 0 0"><i class="fa-solid fa-circle-check"></i><span>Your code is secure and private.</span></div>
+        </div>
+        <div class="resend">Resend code in <b id="resendTimer">00:28</b></div>
+        <div style="padding:0 18px"><button class="btn" onclick="go('profileSetup')">Verify &amp; Continue <i class="fa-solid fa-arrow-right"></i></button></div>
+      </div>
+    </section>
+
+    <!-- ============ PROFILE SETUP ============ -->
+    <section class="screen" id="profileSetup">
+      <div class="app-header"><span class="back" onclick="go('otp')"><i class="fa-solid fa-arrow-left"></i></span></div>
+      <div class="screen-body">
+        <div class="title-block">
+          <h1>Let's set up your profile</h1>
+          <p>Add a few details to personalize<br>your experience.</p>
+        </div>
+        <div class="avatar-up"><i class="fa-solid fa-camera"></i><span class="plus"><i class="fa-solid fa-plus"></i></span></div>
+        <div class="hint" style="text-align:center">Tap to upload photo</div>
+        <div class="card">
+          <div class="float-field"><i class="fa-solid fa-user ff-icon"></i><div class="ff-inner"><label>Display name</label><input value="Aarav Mehta"></div></div>
+          <div class="float-field"><i class="fa-solid fa-at ff-icon"></i><div class="ff-inner"><label>Username</label><input value="@aarav.m"></div></div>
+          <div class="float-field" style="align-items:flex-start"><i class="fa-solid fa-pen ff-icon" style="margin-top:18px"></i><div class="ff-inner"><label>Bio (optional)</label><textarea rows="2">Expressing mood, one chat at a time.</textarea></div></div>
+        </div>
+        <div style="padding:0 18px"><button class="btn" onclick="go('chats')">Finish <i class="fa-solid fa-check"></i></button></div>
+      </div>
+    </section>
+
+    <!-- ============ CHATS LIST ============ -->
+    <section class="screen" id="chats">
+      <div class="home-top">
+        <div class="brand-sm"><span class="logo-mini"><i class="fa-solid fa-comment-dots"></i></span>MOODCHAT</div>
+        <div class="ht-actions"><i class="fa-solid fa-magnifying-glass"></i><i class="fa-regular fa-sun"></i><i class="fa-solid fa-gear" onclick="go('settings')"></i></div>
+      </div>
+      <div class="tabs">
+        <div class="tab active">All</div><div class="tab">Unread</div><div class="tab">Groups</div><div class="tab">Channels</div>
+      </div>
+      <div class="screen-body" id="chatsList">
+        <div class="req-card">
+          <span class="close" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></span>
+          <div class="req-head"><img class="avatar" src="https://i.pravatar.cc/100?img=47"><div><div class="ci-name">Maya P.</div><div class="ci-msg">wants to connect</div></div></div>
+          <div class="req-actions"><button class="btn" onclick="toast('Request accepted ✅')">Accept</button><button class="btn btn-ghost" onclick="toast('Request rejected')">Reject</button></div>
+        </div>
+        <div class="section-label"><i class="fa-solid fa-thumbtack"></i> Pinned</div>
+        <div class="chat-item" onclick="openChat('aarav')"><img class="avatar" src="https://i.pravatar.cc/100?img=12"><div class="ci-main"><div class="ci-top"><span class="ci-name">Aarav Mehta</span><span class="ci-time">9:40 AM</span></div><div class="ci-bottom"><span class="ci-msg">Let's catch up later today!</span><span class="badge">2</span></div></div></div>
+        <div class="chat-item" onclick="openGroup()"><div class="avatar ph">WB</div><div class="ci-main"><div class="ci-top"><span class="ci-name">Work Buddies</span><span class="ci-time">9:21 AM</span></div><div class="ci-bottom"><span class="ci-msg">Neha: Shared the files</span><i class="fa-solid fa-volume-xmark mute-i"></i></div></div></div>
+        <div class="section-label"><i class="fa-solid fa-comments"></i> All Chats</div>
+        <div class="chat-item" onclick="openChat('maya')"><img class="avatar" src="https://i.pravatar.cc/100?img=47"><div class="ci-main"><div class="ci-top"><span class="ci-name">Maya P.</span><span class="ci-time">8:58 AM</span></div><div class="ci-bottom"><span class="ci-msg">Hey! How are you doing?</span><span class="badge">1</span></div></div></div>
+        <div class="chat-item" onclick="openChat('rohan')"><img class="avatar" src="https://i.pravatar.cc/100?img=33"><div class="ci-main"><div class="ci-top"><span class="ci-name">Rohan Singh</span><span class="ci-time">8:30 AM</span></div><div class="ci-bottom"><span class="ci-msg">Reacted 👍 to your message</span><span class="dot-green"></span></div></div></div>
+        <div class="chat-item" onclick="openGroup()"><div class="avatar ph">DT</div><div class="ci-main"><div class="ci-top"><span class="ci-name">Design Team</span><span class="ci-time">Yesterday</span></div><div class="ci-bottom"><span class="ci-msg">Priya: New mockups are ready</span></div></div></div>
+        <div class="chat-item" onclick="openChat('neha')"><img class="avatar" src="https://i.pravatar.cc/100?img=45"><div class="ci-main"><div class="ci-top"><span class="ci-name">Neha Kapoor</span><span class="ci-time">Yesterday</span></div><div class="ci-bottom"><span class="ci-msg">That sounds perfect!</span></div></div></div>
+        <div class="chat-item" onclick="openGroup()"><div class="avatar ph">WP</div><div class="ci-main"><div class="ci-top"><span class="ci-name">Weekend Plans</span><span class="ci-time">Yesterday</span></div><div class="ci-bottom"><span class="ci-msg">Karan: Poll created</span></div></div></div>
+        <div class="chat-item" onclick="openChat('arjun')"><img class="avatar" src="https://i.pravatar.cc/100?img=15"><div class="ci-main"><div class="ci-top"><span class="ci-name">Arjun Dev</span><span class="ci-time">Mon</span></div><div class="ci-bottom"><span class="ci-msg">See you tomorrow</span></div></div></div>
+        <div style="height:80px"></div>
+      </div>
+      <div class="fab" onclick="go('contacts')"><i class="fa-solid fa-comment-medical"></i></div>
+      <nav class="bottom-nav">
+        <div class="nav-item active"><i class="fa-solid fa-comment"></i>Chats</div>
+        <div class="nav-item" onclick="go('calls')"><i class="fa-solid fa-phone"></i>Calls</div>
+        <div class="nav-item" onclick="go('status')"><i class="fa-regular fa-circle-dot"></i>Status</div>
+        <div class="nav-item" onclick="go('contacts')"><i class="fa-solid fa-user-group"></i>People</div>
+        <div class="nav-item" onclick="go('games')"><i class="fa-solid fa-gamepad"></i>Games</div>
+      </nav>
+    </section>
+
+    <!-- ============ HIDDEN CHATS ============ -->
+    <section class="screen" id="hidden">
+      <div class="app-header"><span class="back" onclick="go('chats')"><i class="fa-solid fa-arrow-left"></i></span><h2>Hidden Chats</h2><span class="h-actions"><i class="fa-solid fa-lock"></i></span></div>
+      <div class="screen-body">
+        <p style="text-align:center;color:var(--muted);font-size:13px;padding:0 30px 8px">These conversations are hidden and protected by your privacy.</p>
+        <div class="chat-item"><img class="avatar" src="https://i.pravatar.cc/100?img=47"><div class="ci-main"><div class="ci-top"><span class="ci-name">Maya P.</span><span class="ci-time">8:58 AM</span></div><div class="ci-bottom"><span class="ci-msg">Can't wait to share this!</span><span class="badge">1</span></div></div></div>
+        <div class="chat-item"><div class="avatar ph">PX</div><div class="ci-main"><div class="ci-top"><span class="ci-name">Project X</span><span class="ci-time">Yesterday</span></div><div class="ci-bottom"><span class="ci-msg">Confidential discussion</span><i class="fa-solid fa-volume-xmark mute-i"></i></div></div></div>
+        <div class="chat-item"><img class="avatar" src="https://i.pravatar.cc/100?img=12"><div class="ci-main"><div class="ci-top"><span class="ci-name">Aarav Mehta</span><span class="ci-time">Mon</span></div><div class="ci-bottom"><span class="ci-msg">This stays between us</span></div></div></div>
+        <div class="info-pill"><i class="fa-solid fa-shield-halved"></i> Your hidden chats are end-to-end encrypted and never leave this device.</div>
+      </div>
+    </section>
+
+    <!-- ============ CONVERSATION (1:1) ============ -->
+    <section class="screen" id="conv">
+      <div class="conv-header">
+        <span class="back" onclick="go('chats')"><i class="fa-solid fa-arrow-left"></i></span>
+        <img class="avatar" src="https://i.pravatar.cc/100?img=12" id="convAvatar">
+        <div class="ch-info" onclick="go('chatInfo')"><div class="ch-name" id="convName">Aarav Mehta</div><div class="ch-sub">Online</div></div>
+        <div class="ch-actions"><i class="fa-solid fa-phone" onclick="startAudioCall('Aarav Mehta','https://i.pravatar.cc/200?img=12')"></i><i class="fa-solid fa-video" onclick="go('callVideo')"></i><i class="fa-solid fa-ellipsis-vertical" onclick="go('chatInfo')"></i></div>
+      </div>
+      <div class="chat-bg" id="convBody">
+        <div class="day-sep"><span>Today</span></div>
+        <div class="msg in" oncontextmenu="openLP(event)">Hey! How have you been?<div class="meta">9:30 AM</div></div>
+        <div style="clear:both"></div>
+        <div class="msg out">I've been good, thanks!<br>Working on some exciting stuff.<div class="meta">9:31 AM <i class="fa-solid fa-check-double tick"></i></div></div>
+        <div style="clear:both"></div>
+        <div class="msg in" oncontextmenu="openLP(event)"><div class="sender">Aarav Mehta</div>Hey! How have you been?<br>Pretty good! Just a bit busy these days.<div class="reactions r-in">🔥❤️👍 12</div><div class="meta">9:32 AM</div></div>
+        <div style="clear:both"></div>
+        <div class="msg out" style="padding:5px"><img class="msg-img" src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=70"><div class="meta">9:33 AM <i class="fa-solid fa-check-double tick"></i></div></div>
+        <div style="clear:both"></div>
+        <div class="msg out"><div class="voice-note"><span class="play"><i class="fa-solid fa-play"></i></span><span class="voice-wave"></span><span class="speed">1.5x</span></div><div class="meta">9:34 AM <i class="fa-solid fa-check-double tick"></i></div></div>
+        <div style="clear:both"></div>
+        <div class="typing-pill" id="typingPill">Aarav is typing<span id="dots">...</span></div>
+        <div style="clear:both;height:10px"></div>
+      </div>
+      <div class="composer">
+        <div class="c-input"><i class="fa-regular fa-face-smile"></i><input id="msgInput" placeholder="Type a message..."><i class="fa-solid fa-paperclip"></i><i class="fa-solid fa-camera" onclick="go('doodleCanvas')"></i></div>
+        <div class="mic" id="sendBtn"><i class="fa-solid fa-microphone"></i></div>
+      </div>
+    </section>
+
+    <!-- long press overlay -->
+    <div class="lp-overlay" id="lpOverlay" onclick="closeLP(event)">
+      <div class="lp-bubble">Hey! How have you been?</div>
+      <div class="lp-menu">
+        <div class="lp-i" onclick="closeLP();toast('Reply')"><i class="fa-solid fa-reply"></i> Reply</div>
+        <div class="lp-i" onclick="closeLP();toast('Copied')"><i class="fa-solid fa-copy"></i> Copy</div>
+        <div class="lp-i" onclick="closeLP();toast('Edit')"><i class="fa-solid fa-pen"></i> Edit</div>
+        <div class="lp-i danger" onclick="closeLP();toast('Deleted')"><i class="fa-solid fa-trash"></i> Delete</div>
+        <div class="lp-i" onclick="closeLP();toast('React ❤️')"><i class="fa-solid fa-heart"></i> React</div>
+        <div class="lp-i" onclick="closeLP();toast('Forwarded')"><i class="fa-solid fa-share"></i> Forward</div>
+      </div>
+    </div>
+
+    <!-- ============ GROUP CHAT ============ -->
+    <section class="screen" id="group">
+      <div class="conv-header">
+        <span class="back" onclick="go('chats')"><i class="fa-solid fa-arrow-left"></i></span>
+        <div class="avatar ph">PP</div>
+        <div class="ch-info"><div class="ch-name">Project Pulse 🚀</div><div class="ch-sub" style="color:var(--muted)">8 members, 2 online</div></div>
+        <div class="ch-actions"><i class="fa-solid fa-phone"></i><i class="fa-solid fa-ellipsis-vertical"></i></div>
+      </div>
+      <div class="chat-bg">
+        <div class="day-sep"><span>Today</span></div>
+        <div class="msg in"><div class="sender">Riya Singh <small style="color:var(--muted);font-weight:400">admin</small></div>Morning team! 🌟 Let's sync up at 11 AM.<div class="meta">9:15 AM</div></div>
+        <div style="clear:both"></div>
+        <div class="msg in"><div class="sender">Karan Verma</div>Sounds good. I'll share the update by then.<div class="meta">9:16 AM</div></div>
+        <div style="clear:both"></div>
+        <div class="msg out">I'll prepare the deck and share it here.<div class="meta">9:17 AM <i class="fa-solid fa-check-double tick"></i></div></div>
+        <div style="clear:both"></div>
+        <div class="msg in"><div class="sender">Neha Kapoor</div>Don't forget the client feedback from yesterday.<div class="meta">9:18 AM</div></div>
+        <div style="clear:both"></div>
+        <div class="msg in"><div class="sender">Riya Singh</div><div style="display:flex;gap:10px;align-items:center;background:var(--surface-3);padding:8px;border-radius:10px"><i class="fa-solid fa-file-pdf" style="color:var(--danger);font-size:22px"></i><div><div style="font-size:13px">Client_Feedback.pdf</div><div style="font-size:11px;color:var(--muted)">1.8 MB · PDF</div></div></div><div class="meta">9:19 AM</div></div>
+        <div style="clear:both"></div>
+        <div class="msg out">Thanks! This will help. 👍<div class="meta">9:20 AM <i class="fa-solid fa-check-double tick"></i></div></div>
+        <div style="clear:both"></div>
+      </div>
+      <div class="composer">
+        <div class="c-input"><i class="fa-regular fa-face-smile"></i><input placeholder="Type a message..."><i class="fa-solid fa-paperclip"></i><i class="fa-solid fa-camera"></i></div>
+        <div class="mic"><i class="fa-solid fa-microphone"></i></div>
+      </div>
+    </section>
+
+    <!-- ============ CHAT INFO ============ -->
+    <section class="screen" id="chatInfo">
+      <div class="app-header"><span class="back" onclick="go('conv')"><i class="fa-solid fa-arrow-left"></i></span><h2>Chat Info</h2><span class="h-actions"><i class="fa-solid fa-ellipsis-vertical"></i></span></div>
+      <div class="screen-body">
+        <div class="profile-hero">
+          <img class="avatar" src="https://i.pravatar.cc/200?img=12">
+          <h2>Aarav Mehta</h2>
+          <div class="uname">@aarav.m</div>
+          <div class="phone-no">+91 98765 43210</div>
+        </div>
+        <div class="quick-actions">
+          <div class="qa" onclick="startAudioCall('Aarav Mehta','https://i.pravatar.cc/200?img=12')"><i class="fa-solid fa-phone"></i><span>Audio</span></div>
+          <div class="qa" onclick="go('callVideo')"><i class="fa-solid fa-video"></i><span>Video</span></div>
+          <div class="qa"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></div>
+          <div class="qa"><i class="fa-solid fa-ellipsis"></i><span>More</span></div>
+        </div>
+        <div class="section-label" style="justify-content:space-between"><span>Media, Links &amp; Docs</span><span style="color:var(--accent-2)">248 ›</span></div>
+        <div class="media-strip">
+          <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=120&q=60">
+          <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=120&q=60">
+          <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=120&q=60">
+          <div class="more">+245</div>
+        </div>
+        <div class="list-row"><i class="fa-solid fa-bell lr-icon"></i><div class="lr-main"><div class="lr-title">Mute notifications</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="list-row"><i class="fa-solid fa-bell-concierge lr-icon"></i><div class="lr-main"><div class="lr-title">Custom notifications</div></div><i class="fa-solid fa-chevron-right" style="color:var(--muted)"></i></div>
+        <div class="list-row"><i class="fa-solid fa-image lr-icon"></i><div class="lr-main"><div class="lr-title">Media visibility</div></div><i class="fa-solid fa-chevron-right" style="color:var(--muted)"></i></div>
+        <div class="list-row danger"><i class="fa-solid fa-ban lr-icon"></i><div class="lr-main"><div class="lr-title">Block Contact</div></div></div>
+        <div class="list-row danger"><i class="fa-solid fa-trash lr-icon"></i><div class="lr-main"><div class="lr-title">Clear Chat</div></div></div>
+      </div>
+    </section>
+
+    <!-- ============ STATUS HUB ============ -->
+    <section class="screen" id="status">
+      <div class="home-top">
+        <div class="brand-sm"><span class="logo-mini"><i class="fa-solid fa-comment-dots"></i></span>MOODCHAT</div>
+        <div class="ht-actions"><i class="fa-solid fa-magnifying-glass"></i><i class="fa-regular fa-face-smile"></i></div>
+      </div>
+      <div class="screen-body">
+        <div class="section-label">My Status</div>
+        <div class="status-row" onclick="openStatusViewer()">
+          <div class="status-ring status-add"><img src="https://i.pravatar.cc/100?img=45"><span class="add"><i class="fa-solid fa-plus"></i></span></div>
+          <div class="ci-main"><div class="ci-name">My Status</div><div class="ci-msg">Feeling grateful today ✨</div><div style="font-size:11px;color:var(--accent-2)">Just now</div></div>
+          <i class="fa-solid fa-ellipsis-vertical" style="color:var(--muted)" onclick="event.stopPropagation();go('statusComposer')"></i>
+        </div>
+        <div class="section-label" style="justify-content:space-between"><span>Recent Updates</span><span style="color:var(--accent-2)">View all</span></div>
+        <div class="recent-row">
+          <div class="recent-item" onclick="openStatusViewer()"><div class="status-ring"><img src="https://i.pravatar.cc/100?img=12"></div><span>Aarav</span><span>2m ago</span></div>
+          <div class="recent-item" onclick="openStatusViewer()"><div class="status-ring"><img src="https://i.pravatar.cc/100?img=20"></div><span>Sara</span><span>15m ago</span></div>
+          <div class="recent-item" onclick="openStatusViewer()"><div class="status-ring"><img src="https://i.pravatar.cc/100?img=33"></div><span>Rohan</span><span>32m ago</span></div>
+          <div class="recent-item" onclick="openStatusViewer()"><div class="status-ring"><img src="https://i.pravatar.cc/100?img=47"></div><span>Meera</span><span>1h ago</span></div>
+        </div>
+        <div class="section-label" style="justify-content:space-between"><span>Viewed Updates</span><span style="color:var(--accent-2)">View all</span></div>
+        <div class="status-row" onclick="openStatusViewer()"><div class="status-ring seen"><img src="https://i.pravatar.cc/100?img=51"></div><div class="ci-main"><div class="ci-name">Kabir</div><div class="ci-msg">Today, 8:20 AM</div></div><i class="fa-solid fa-ellipsis-vertical" style="color:var(--muted)"></i></div>
+        <div class="status-row" onclick="openStatusViewer()"><div class="status-ring seen"><img src="https://i.pravatar.cc/100?img=24"></div><div class="ci-main"><div class="ci-name">Ananya</div><div class="ci-msg">Today, 7:45 AM</div></div><i class="fa-solid fa-ellipsis-vertical" style="color:var(--muted)"></i></div>
+        <div class="status-row" onclick="openStatusViewer()"><div class="status-ring seen"><img src="https://i.pravatar.cc/100?img=60"></div><div class="ci-main"><div class="ci-name">Dev</div><div class="ci-msg">Yesterday, 11:30 PM</div></div><i class="fa-solid fa-ellipsis-vertical" style="color:var(--muted)"></i></div>
+        <div style="height:70px"></div>
+      </div>
+      <nav class="bottom-nav">
+        <div class="nav-item" onclick="go('chats')"><i class="fa-solid fa-comment"></i>Chats</div>
+        <div class="nav-item" onclick="go('calls')"><i class="fa-solid fa-phone"></i>Calls</div>
+        <div class="nav-item active"><i class="fa-solid fa-circle-dot"></i>Status</div>
+        <div class="nav-item" onclick="go('contacts')"><i class="fa-solid fa-user-group"></i>People</div>
+        <div class="nav-item" onclick="go('settings')"><i class="fa-solid fa-gear"></i>Settings</div>
+      </nav>
+    </section>
+
+    <!-- ============ STATUS COMPOSER ============ -->
+    <section class="screen" id="statusComposer">
+      <div class="app-header"><span class="back" onclick="go('status')"><i class="fa-solid fa-xmark"></i></span><h2>Add Status</h2><span class="h-actions"><i class="fa-regular fa-clock"></i> <small style="font-size:13px;align-self:center">24h</small></span></div>
+      <div class="screen-body">
+        <div class="seg"><div class="seg-i active">Text</div><div class="seg-i">Image</div><div class="seg-i">Video</div></div>
+        <div class="compose-canvas" id="composeCanvas">Expressing mood,<br>one chat at a time.</div>
+        <div class="section-label">Pick a background</div>
+        <div class="color-row">
+          <div class="color-dot sel" style="background:linear-gradient(135deg,#0c5132,#1faa52)" onclick="pickBg(this,'linear-gradient(135deg,#0c5132,#1faa52)')"></div>
+          <div class="color-dot" style="background:#2b2b2b" onclick="pickBg(this,'#2b2b2b')"></div>
+          <div class="color-dot" style="background:#5b3da8" onclick="pickBg(this,'#5b3da8')"></div>
+          <div class="color-dot" style="background:#7a3b2e" onclick="pickBg(this,'#7a3b2e')"></div>
+          <div class="color-dot" style="background:#2e5a7a" onclick="pickBg(this,'#2e5a7a')"></div>
+          <div class="color-dot" style="background:#8a4a2e" onclick="pickBg(this,'#8a4a2e')"></div>
+        </div>
+        <div class="section-label">Add to your status</div>
+        <div style="display:flex;gap:10px;padding:8px 18px">
+          <div class="qa" style="flex:1"><i class="fa-solid fa-image"></i><span>Gallery</span></div>
+          <div class="qa" style="flex:1"><i class="fa-solid fa-camera"></i><span>Camera</span></div>
+          <div class="qa" style="flex:1"><i class="fa-solid fa-video"></i><span>Video</span></div>
+        </div>
+      </div>
+      <div style="padding:14px 18px"><button class="btn" onclick="go('status');toast('Status shared ✅')">Share Status <i class="fa-solid fa-paper-plane"></i></button></div>
+    </section>
+
+    <!-- ============ STATUS VIEWER ============ -->
+    <section class="screen" id="statusViewer">
+      <div class="sv-bars"><div class="sv-bar done"><div class="fill"></div></div><div class="sv-bar" id="svActiveBar"><div class="fill"></div></div><div class="sv-bar"><div class="fill"></div></div></div>
+      <div class="sv-top"><img class="avatar" src="https://i.pravatar.cc/100?img=12"><div style="flex:1"><div class="name" style="color:#fff">Aarav Mehta</div><div class="time">Today, 9:41 AM</div></div><i class="fa-solid fa-xmark" style="color:#fff;font-size:20px;cursor:pointer" onclick="go('status')"></i></div>
+      <div class="sv-canvas"><img src="https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?w=600&q=70"><div class="sv-caption">Good vibes,<br>great life. 💚</div></div>
+      <div class="sv-react"><span onclick="toast('❤️ sent')">❤️</span><span onclick="toast('🙌 sent')">🙌</span><span onclick="toast('🔥 sent')">🔥</span><span onclick="toast('😀 sent')">😀</span><span onclick="toast('😮 sent')">😮</span><span onclick="toast('😂 sent')">😂</span></div>
+      <div class="sv-reply"><input placeholder="Reply to Aarav..."><div class="mic" onclick="toast('Reply sent')"><i class="fa-solid fa-paper-plane"></i></div></div>
+    </section>
+
+    <!-- ============ CONTACTS ============ -->
+    <section class="screen" id="contacts">
+      <div class="app-header"><span class="back" onclick="go('chats')"><i class="fa-solid fa-arrow-left"></i></span><h2>Contacts</h2></div>
+      <div style="padding:0 18px 4px"><div class="c-input" style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;gap:10px;padding:12px 14px"><i class="fa-solid fa-magnifying-glass" style="color:var(--muted)"></i><input id="contactSearch" style="flex:1;background:none;border:none;outline:none;color:var(--text);font-size:14px;font-family:inherit" placeholder="Search by @username or phone number" oninput="searchContacts(this.value)"><i class="fa-solid fa-xmark" style="color:var(--muted);cursor:pointer" onclick="document.getElementById('contactSearch').value='';searchContacts('')"></i></div></div>
+      <div class="privacy-note"><i class="fa-solid fa-shield-halved"></i><span>Search is private. Only you can see your results.</span></div>
+      <div class="screen-body" id="contactResults">
+        <div class="empty">
+          <div class="e-icon"><i class="fa-solid fa-comment-dots"></i></div>
+          <h3 style="font-size:16px;color:var(--muted)">Search to find friends</h3>
+          <p>Search-only discovery. No feed,<br>just people you know.</p>
+        </div>
+      </div>
+      <nav class="bottom-nav">
+        <div class="nav-item" onclick="go('chats')"><i class="fa-solid fa-comment"></i>Chats</div>
+        <div class="nav-item active"><i class="fa-solid fa-user-group"></i>Contacts</div>
+        <div class="nav-item" onclick="go('status')"><i class="fa-regular fa-circle-dot"></i>Status</div>
+        <div class="nav-item" onclick="go('profileSetup')"><i class="fa-solid fa-user"></i>Profile</div>
+        <div class="nav-item" onclick="go('settings')"><i class="fa-solid fa-gear"></i>Settings</div>
+      </nav>
+    </section>
+
+    <!-- ============ FRIEND REQUEST ============ -->
+    <section class="screen" id="friendRequest">
+      <div class="app-header"><span class="back" onclick="go('contacts')"><i class="fa-solid fa-arrow-left"></i></span><h2>Send Friend Request</h2></div>
+      <div class="screen-body">
+        <div class="profile-hero"><img class="avatar" src="https://i.pravatar.cc/200?img=20" style="width:84px;height:84px"><h2 style="font-size:18px">@sarah.mood</h2><div class="phone-no">+91 98765 43210</div></div>
+        <div class="card">
+          <div class="field-label">Add a personal note (optional)</div>
+          <textarea class="text-input" rows="3" style="width:100%" placeholder="Hi 👋">Hi 👋</textarea>
+        </div>
+        <div class="info-pill"><i class="fa-solid fa-shield-halved"></i> Your request is private. They'll see your username and note only if they accept.</div>
+        <div style="padding:0 18px"><button class="btn" onclick="go('contacts');toast('Friend request sent ✅')">Send Friend Request <i class="fa-solid fa-paper-plane"></i></button></div>
+      </div>
+    </section>
+
+    <!-- ============ CALLS LIST ============ -->
+    <section class="screen" id="calls">
+      <div class="home-top"><div class="brand-sm" style="font-size:24px">Calls</div><div class="ht-actions"><i class="fa-solid fa-user-plus"></i></div></div>
+      <div style="padding:0 18px 4px"><div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;gap:10px;padding:12px 14px"><i class="fa-solid fa-magnifying-glass" style="color:var(--muted)"></i><input style="flex:1;background:none;border:none;outline:none;color:var(--text);font-size:14px;font-family:inherit" placeholder="Search calls or contacts"></div></div>
+      <div class="tabs"><div class="tab active">All</div><div class="tab">Missed</div><div class="tab">Incoming</div><div class="tab">Outgoing</div></div>
+      <div class="screen-body">
+        <div class="section-label">Today</div>
+        <div class="call-item" onclick="startAudioCall('Aarav Mehta','https://i.pravatar.cc/200?img=12')"><img class="avatar" src="https://i.pravatar.cc/100?img=12"><div class="ci-main"><div class="ci-name">Aarav Mehta</div><div class="call-meta"><i class="fa-solid fa-arrow-up-right-from-square"></i>Outgoing call</div></div><span class="ci-time">9:41 AM</span><i class="fa-solid fa-circle-info info"></i></div>
+        <div class="call-item" onclick="startAudioCall('Diya Sharma','https://i.pravatar.cc/200?img=20')"><img class="avatar" src="https://i.pravatar.cc/100?img=20"><div class="ci-main"><div class="ci-name">Diya Sharma</div><div class="call-meta incoming"><i class="fa-solid fa-phone-volume"></i>Incoming call</div></div><span class="ci-time">9:02 AM</span><i class="fa-solid fa-circle-info info"></i></div>
+        <div class="call-item" onclick="startAudioCall('Rohan Verma','https://i.pravatar.cc/200?img=33')"><img class="avatar" src="https://i.pravatar.cc/100?img=33"><div class="ci-main"><div class="ci-name">Rohan Verma</div><div class="call-meta missed"><i class="fa-solid fa-phone-slash"></i>Missed call</div></div><span class="ci-time">8:21 AM</span><i class="fa-solid fa-circle-info info"></i></div>
+        <div class="section-label">Yesterday</div>
+        <div class="call-item" onclick="startAudioCall('Neha Kapoor','https://i.pravatar.cc/200?img=45')"><img class="avatar" src="https://i.pravatar.cc/100?img=45"><div class="ci-main"><div class="ci-name">Neha Kapoor</div><div class="call-meta"><i class="fa-solid fa-arrow-up-right-from-square"></i>Outgoing call</div></div><span class="ci-time">Yesterday</span><i class="fa-solid fa-circle-info info"></i></div>
+        <div class="call-item" onclick="startAudioCall('Vikram Singh','https://i.pravatar.cc/200?img=15')"><img class="avatar" src="https://i.pravatar.cc/100?img=15"><div class="ci-main"><div class="ci-name">Vikram Singh</div><div class="call-meta incoming"><i class="fa-solid fa-phone-volume"></i>Incoming call</div></div><span class="ci-time">Yesterday</span><i class="fa-solid fa-circle-info info"></i></div>
+        <div class="call-item" onclick="startAudioCall('Ananya Iyer','https://i.pravatar.cc/200?img=24')"><img class="avatar" src="https://i.pravatar.cc/100?img=24"><div class="ci-main"><div class="ci-name">Ananya Iyer</div><div class="call-meta missed"><i class="fa-solid fa-phone-slash"></i>Missed call</div></div><span class="ci-time">Yesterday</span><i class="fa-solid fa-circle-info info"></i></div>
+        <div style="height:70px"></div>
+      </div>
+      <nav class="bottom-nav">
+        <div class="nav-item" onclick="go('chats')"><i class="fa-solid fa-comment"></i>Chats</div>
+        <div class="nav-item active"><i class="fa-solid fa-phone"></i>Calls</div>
+        <div class="nav-item" onclick="go('status')"><i class="fa-regular fa-circle-dot"></i>Status</div>
+        <div class="nav-item" onclick="go('contacts')"><i class="fa-solid fa-user-group"></i>People</div>
+        <div class="nav-item" onclick="go('games')"><i class="fa-solid fa-gamepad"></i>Games</div>
+      </nav>
+    </section>
+
+    <!-- ============ AUDIO CALL ============ -->
+    <section class="screen" id="callActive">
+      <div class="call-active-top"><i class="fa-solid fa-lock"></i> End-to-end Encrypted</div>
+      <img class="call-avatar-big" id="callAvatar" src="https://i.pravatar.cc/200?img=12">
+      <div class="call-name-big" id="callName">Aarav Mehta</div>
+      <div class="call-timer" id="callTimer">00:01</div>
+      <div class="call-quality"><i class="fa-solid fa-signal"></i> HD Audio</div>
+      <div class="call-controls">
+        <div class="cc-btn" onclick="this.classList.toggle('active')"><div class="icon"><i class="fa-solid fa-microphone-slash"></i></div>Mute</div>
+        <div class="cc-btn active" onclick="this.classList.toggle('active')"><div class="icon"><i class="fa-solid fa-volume-high"></i></div>Speaker</div>
+        <div class="cc-btn"><div class="icon"><i class="fa-solid fa-grip"></i></div>Keypad</div>
+        <div class="cc-btn"><div class="icon"><i class="fa-solid fa-plus"></i></div>Add Call</div>
+        <div class="cc-btn" onclick="go('callVideo')"><div class="icon"><i class="fa-solid fa-video"></i></div>Video</div>
+        <div class="cc-btn"><div class="icon"><i class="fa-solid fa-ellipsis"></i></div>More</div>
+      </div>
+      <div class="end-call" onclick="endCall()"><i class="fa-solid fa-phone-slash"></i></div>
+    </section>
+
+    <!-- ============ VIDEO CALL ============ -->
+    <section class="screen" id="callVideo">
+      <div class="vid-remote">
+        <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=500&q=70">
+        <div class="vid-top"><i class="fa-solid fa-chevron-down" style="color:#fff;font-size:18px;cursor:pointer" onclick="go('conv')"></i><div style="text-align:center;color:#fff"><div style="font-weight:600">Aarav Mehta</div><div style="font-size:12px;color:var(--accent-2)">00:02:18</div></div><i class="fa-solid fa-shield-halved" style="color:var(--accent-2)"></i></div>
+        <div class="vid-self"><img src="https://i.pravatar.cc/200?img=45"></div>
+        <div class="vid-controls">
+          <div class="vc" onclick="this.classList.toggle('on')"><i class="fa-solid fa-microphone"></i></div>
+          <div class="vc on"><i class="fa-solid fa-video"></i></div>
+          <div class="vc"><i class="fa-solid fa-camera-rotate"></i></div>
+          <div class="vc"><i class="fa-solid fa-volume-high"></i></div>
+          <div class="vc end" onclick="endCall()"><i class="fa-solid fa-phone-slash"></i></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ GAMES HUB ============ -->
+    <section class="screen" id="games">
+      <div class="games-head"><img class="avatar" src="https://i.pravatar.cc/100?img=45" style="width:38px;height:38px"><span class="lvl"><i class="fa-solid fa-trophy"></i> Lvl 7</span></div>
+      <div class="title-block" style="text-align:left;padding:6px 20px"><h1 style="font-size:22px">Games Hub</h1><p style="text-align:left">Pick a game. Invite a friend. Play &amp; vibe together.</p></div>
+      <div class="section-label" style="justify-content:space-between"><span>Play Together</span><span style="color:var(--accent-2)">6 games</span></div>
+      <div class="screen-body">
+        <div class="games-grid">
+          <div class="game-card" onclick="go('gamePicker')"><div class="gc-icon"><i class="fa-solid fa-xmark"></i></div><div class="gc-name">Tic-Tac-Toe</div><div class="gc-sub">2 players</div></div>
+          <div class="game-card" onclick="go('gamePicker')"><div class="gc-icon"><i class="fa-solid fa-hand-scissors"></i></div><div class="gc-name">Rock-Paper-Scissors</div><div class="gc-sub">2 players</div></div>
+          <div class="game-card" onclick="go('gamePicker')"><div class="gc-icon"><i class="fa-solid fa-clone"></i></div><div class="gc-name">Memory Flip</div><div class="gc-sub">2 players</div></div>
+          <div class="game-card" onclick="go('gamePicker')"><div class="gc-icon"><i class="fa-solid fa-dice"></i></div><div class="gc-name">Number</div><div class="gc-sub">2 players</div></div>
+          <div class="game-card" onclick="go('gamePicker')"><div class="gc-icon"><i class="fa-solid fa-circle-nodes"></i></div><div class="gc-name">Dots Race</div><div class="gc-sub">2 players</div></div>
+          <div class="game-card" onclick="go('gamePicker')"><div class="gc-icon"><i class="fa-solid fa-font"></i></div><div class="gc-name">Word Mix</div><div class="gc-sub">2 players</div></div>
+        </div>
+        <div style="height:70px"></div>
+      </div>
+      <nav class="bottom-nav">
+        <div class="nav-item" onclick="go('chats')"><i class="fa-solid fa-comment"></i>Chats</div>
+        <div class="nav-item" onclick="go('contacts')"><i class="fa-solid fa-user-group"></i>Friends</div>
+        <div class="nav-item active"><i class="fa-solid fa-gamepad"></i>Games</div>
+        <div class="nav-item" onclick="go('status')"><i class="fa-regular fa-face-smile"></i>Mood</div>
+        <div class="nav-item" onclick="go('settings')"><i class="fa-solid fa-user"></i>Profile</div>
+      </nav>
+    </section>
+
+    <!-- ============ GAME FRIEND PICKER ============ -->
+    <section class="screen" id="gamePicker">
+      <div class="app-header"><span class="back" onclick="go('games')"><i class="fa-solid fa-xmark"></i></span><h2>Invite a Friend</h2></div>
+      <div style="padding:0 18px 4px"><div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;gap:10px;padding:12px 14px"><i class="fa-solid fa-magnifying-glass" style="color:var(--muted)"></i><input style="flex:1;background:none;border:none;outline:none;color:var(--text);font-size:14px;font-family:inherit" placeholder="Search friends"></div></div>
+      <div class="screen-body" id="pickerList">
+        <div class="section-label">Accepted friends only</div>
+        <div class="chat-item picker-row" onclick="selectFriend(this,'Aarav Mehta')"><img class="avatar" src="https://i.pravatar.cc/100?img=12"><div class="ci-main"><div class="ci-name">Aarav Mehta</div><div class="ci-msg">@aarav.m · <span style="color:var(--accent-2)">Online</span></div></div><i class="far fa-circle pick-i"></i></div>
+        <div class="chat-item picker-row" onclick="selectFriend(this,'Diya Shah')"><img class="avatar" src="https://i.pravatar.cc/100?img=20"><div class="ci-main"><div class="ci-name">Diya Shah</div><div class="ci-msg">@diya.sh · <span style="color:var(--accent-2)">Online</span></div></div><i class="far fa-circle pick-i"></i></div>
+        <div class="chat-item picker-row" onclick="selectFriend(this,'Kabir Verma')"><img class="avatar" src="https://i.pravatar.cc/100?img=51"><div class="ci-main"><div class="ci-name">Kabir Verma</div><div class="ci-msg">@kabir.v · <span style="color:var(--accent-2)">Online</span></div></div><i class="far fa-circle pick-i"></i></div>
+        <div class="chat-item picker-row" onclick="selectFriend(this,'Meera Nair')"><img class="avatar" src="https://i.pravatar.cc/100?img=47"><div class="ci-main"><div class="ci-name">Meera Nair</div><div class="ci-msg">@meera.nair · <span style="color:var(--accent-2)">Online</span></div></div><i class="far fa-circle pick-i"></i></div>
+        <div class="chat-item picker-row" onclick="selectFriend(this,'Rohan Iyer')"><img class="avatar" src="https://i.pravatar.cc/100?img=33"><div class="ci-main"><div class="ci-name">Rohan Iyer</div><div class="ci-msg">@rohan.iyer · <span style="color:var(--accent-2)">Online</span></div></div><i class="far fa-circle pick-i"></i></div>
+      </div>
+      <div style="padding:14px 18px"><button class="btn" onclick="go('gameBoard')">Invite to Game <i class="fa-solid fa-paper-plane"></i></button></div>
+    </section>
+
+    <!-- ============ GAME BOARD (Tic-Tac-Toe) ============ -->
+    <section class="screen" id="gameBoard">
+      <div class="app-header"><span class="back" onclick="go('gamePicker')"><i class="fa-solid fa-arrow-left"></i></span><h2 style="text-align:center">Tic-Tac-Toe<br><small style="font-size:12px;color:var(--muted);font-weight:400">2 Players</small></h2><span class="h-actions"><i class="fa-solid fa-ellipsis-vertical"></i></span></div>
+      <div class="ttt-players">
+        <div class="ttt-player"><img src="https://i.pravatar.cc/100?img=45"><div class="pn">You</div><div class="turn" id="turnYou">Your Turn</div></div>
+        <div class="ttt-player"><img src="https://i.pravatar.cc/100?img=12"><div class="pn">Aarav</div><div class="turn" id="turnOpp" style="color:var(--muted)"></div></div>
+      </div>
+      <div class="ttt-board" id="tttBoard"></div>
+      <div class="ttt-result" id="tttResult"><h3 id="tttResultTitle">You Won! 🎉</h3><p>Great game, Aarav!</p></div>
+      <div class="ttt-foot">
+        <button class="btn btn-ghost" onclick="resetTTT()"><i class="fa-solid fa-rotate-right"></i> Rematch</button>
+        <button class="btn btn-ghost" onclick="go('games')"><i class="fa-solid fa-grip"></i> Change Game</button>
+      </div>
+      <div style="padding:0 22px 14px"><button class="btn" onclick="go('chats');toast('Result sent to chat ✅')">Send Result to Chat <i class="fa-regular fa-comment"></i></button></div>
+    </section>
+
+    <!-- ============ SETTINGS ============ -->
+    <section class="screen" id="settings">
+      <div class="app-header"><span class="back" onclick="go('chats')"><i class="fa-solid fa-xmark"></i></span><h2>Settings</h2></div>
+      <div class="screen-body">
+        <div class="settings-profile" onclick="go('editProfile')">
+          <img class="avatar" src="https://i.pravatar.cc/100?img=45">
+          <div class="sp-info"><div class="sp-name">Aarav Mehta</div><div class="sp-user">@aarav.m</div><div class="sp-bio">Expressing mood, one chat at a time.</div></div>
+          <i class="fa-solid fa-chevron-right" style="color:var(--muted)"></i>
+        </div>
+        <div class="list-row" onclick="go('editProfile')"><i class="fa-solid fa-user lr-icon"></i><div class="lr-main"><div class="lr-title">Profile</div><div class="lr-sub">View and edit your profile</div></div><i class="fa-solid fa-chevron-right" style="color:var(--muted)"></i></div>
+        <div class="list-row" onclick="go('themes')"><i class="fa-solid fa-palette lr-icon"></i><div class="lr-main"><div class="lr-title">Chat Themes</div><div class="lr-sub">Customize your chat experience</div></div><i class="fa-solid fa-chevron-right" style="color:var(--muted)"></i></div>
+        <div class="list-row" onclick="go('security')"><i class="fa-solid fa-shield-halved lr-icon"></i><div class="lr-main"><div class="lr-title">Security &amp; App Lock</div><div class="lr-sub">Privacy, encryption &amp; session</div></div><i class="fa-solid fa-chevron-right" style="color:var(--muted)"></i></div>
+        <div class="list-row" onclick="go('notifications')"><i class="fa-solid fa-bell lr-icon"></i><div class="lr-main"><div class="lr-title">Notifications</div><div class="lr-sub">Manage alerts and preferences</div></div><i class="fa-solid fa-chevron-right" style="color:var(--muted)"></i></div>
+        <div class="list-row" onclick="go('hidden')"><i class="fa-solid fa-eye-slash lr-icon"></i><div class="lr-main"><div class="lr-title">Hidden Chats</div><div class="lr-sub">View locked private conversations</div></div><i class="fa-solid fa-chevron-right" style="color:var(--muted)"></i></div>
+        <div class="list-row danger" onclick="go('splash');toast('Logged out')"><i class="fa-solid fa-right-from-bracket lr-icon"></i><div class="lr-main"><div class="lr-title">Logout</div><div class="lr-sub">Sign out of your account</div></div></div>
+        <div style="height:70px"></div>
+      </div>
+      <nav class="bottom-nav">
+        <div class="nav-item" onclick="go('chats')"><i class="fa-solid fa-comment"></i>Chats</div>
+        <div class="nav-item" onclick="go('contacts')"><i class="fa-solid fa-user-group"></i>People</div>
+        <div class="nav-item active"><i class="fa-solid fa-gear"></i>Settings</div>
+      </nav>
+    </section>
+
+    <!-- ============ EDIT PROFILE ============ -->
+    <section class="screen" id="editProfile">
+      <div class="app-header"><span class="back" onclick="go('settings')"><i class="fa-solid fa-arrow-left"></i></span><h2>Edit Profile</h2><span class="h-actions"><span style="color:var(--accent-2);font-size:15px;font-weight:600" onclick="go('settings');toast('Profile saved ✅')">Save</span></span></div>
+      <div class="screen-body">
+        <div class="avatar-up" style="background:none"><img src="https://i.pravatar.cc/200?img=45" style="width:100%;height:100%;border-radius:50%;object-fit:cover"><span class="plus"><i class="fa-solid fa-camera"></i></span></div>
+        <div class="card">
+          <div class="float-field"><div class="ff-inner"><label>Display Name</label><input value="Aarav Mehta"></div></div>
+          <div class="float-field"><i class="fa-solid fa-at ff-icon"></i><div class="ff-inner"><label>Username</label><input value="aarav.m"></div></div>
+          <div class="float-field"><span class="ff-icon">🇮🇳 +91</span><div class="ff-inner"><label>Phone Number</label><input value="98765 43210"></div></div>
+          <div class="float-field" style="align-items:flex-start"><div class="ff-inner"><label>Bio (optional)</label><textarea rows="2">Expressing mood, one chat at a time.</textarea></div></div>
+        </div>
+        <div style="padding:0 18px"><button class="btn" onclick="go('settings');toast('Changes saved ✅')">Save Changes <i class="fa-solid fa-check"></i></button></div>
+      </div>
+    </section>
+
+    <!-- ============ NOTIFICATIONS ============ -->
+    <section class="screen" id="notifications">
+      <div class="app-header"><span class="back" onclick="go('settings')"><i class="fa-solid fa-arrow-left"></i></span><h2>Notifications</h2></div>
+      <div class="screen-body">
+        <div class="section-label">Notify me about</div>
+        <div class="list-row"><div class="lr-main"><div class="lr-title">In-app Notifications</div><div class="lr-sub">Chats, reactions, mentions &amp; more</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="list-row"><div class="lr-main"><div class="lr-title">Browser Notifications</div><div class="lr-sub">Receive alerts on this device</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="list-row"><div class="lr-main"><div class="lr-title">Sound</div><div class="lr-sub">Play sounds for incoming messages</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="list-row"><div class="lr-main"><div class="lr-title">Message Previews</div><div class="lr-sub">Show message content in notifications</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="section-label">Smart Suppression</div>
+        <div class="list-row"><div class="lr-main"><div class="lr-title">Reduce interruptions</div><div class="lr-sub">Pause notifications when inactive</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="list-row"><div class="lr-main"><div class="lr-title">Quiet Hours</div><div class="lr-sub">11:00 PM – 7:00 AM</div></div><i class="fa-solid fa-chevron-right" style="color:var(--muted)"></i></div>
+        <div class="info-pill"><i class="fa-solid fa-shield-halved"></i> You're in control. Notifications are encrypted and never reveal your messages.</div>
+      </div>
+    </section>
+
+    <!-- ============ THEMES ============ -->
+    <section class="screen" id="themes">
+      <div class="app-header"><span class="back" onclick="go('settings')"><i class="fa-solid fa-arrow-left"></i></span><h2>Chat Themes</h2></div>
+      <div class="screen-body">
+        <p style="text-align:center;color:var(--muted);font-size:13px">Choose a theme that reflects your mood.</p>
+        <div class="themes-grid">
+          <div class="theme-card sel" style="background:var(--surface)" onclick="selTheme(this)"><i class="fa-solid fa-circle-check check"></i><div class="tc-preview" style="background:#0a1014"><div class="tc-bubble" style="width:60%;background:#1a242b"></div><div class="tc-bubble" style="width:50%;margin-left:auto;background:#0c5132"></div></div><div class="tc-name">Default</div></div>
+          <div class="theme-card" style="background:var(--surface)" onclick="selTheme(this)"><i class="fa-solid fa-circle-check check"></i><div class="tc-preview" style="background:rgba(255,255,255,.06)"><div class="tc-bubble" style="width:60%;background:rgba(255,255,255,.2)"></div><div class="tc-bubble" style="width:50%;margin-left:auto;background:rgba(37,211,102,.4)"></div></div><div class="tc-name">Glass</div></div>
+          <div class="theme-card" style="background:var(--surface)" onclick="selTheme(this)"><i class="fa-solid fa-circle-check check"></i><div class="tc-preview" style="background:#0a0e1a"><div class="tc-bubble" style="width:60%;background:#1a2440"></div><div class="tc-bubble" style="width:50%;margin-left:auto;background:#2a3a7a"></div></div><div class="tc-name">Midnight</div></div>
+          <div class="theme-card" style="background:var(--surface)" onclick="selTheme(this)"><i class="fa-solid fa-circle-check check"></i><div class="tc-preview" style="background:#06181f"><div class="tc-bubble" style="width:60%;background:#0e3340"></div><div class="tc-bubble" style="width:50%;margin-left:auto;background:#0e5a7a"></div></div><div class="tc-name">Ocean</div></div>
+          <div class="theme-card" style="background:var(--surface)" onclick="selTheme(this)"><i class="fa-solid fa-circle-check check"></i><div class="tc-preview" style="background:#0a1408"><div class="tc-bubble" style="width:60%;background:#16301a"></div><div class="tc-bubble" style="width:50%;margin-left:auto;background:#2e6a2e"></div></div><div class="tc-name">Forest</div></div>
+          <div class="theme-card" style="background:var(--surface)" onclick="selTheme(this)"><i class="fa-solid fa-circle-check check"></i><div class="tc-preview" style="background:#140a1a"><div class="tc-bubble" style="width:60%;background:#2a1640"></div><div class="tc-bubble" style="width:50%;margin-left:auto;background:#a02ed8"></div></div><div class="tc-name">Purple Neon</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SECURITY ============ -->
+    <section class="screen" id="security">
+      <div class="app-header"><span class="back" onclick="go('settings')"><i class="fa-solid fa-arrow-left"></i></span><h2>Security &amp; App Lock</h2></div>
+      <div class="screen-body">
+        <div class="list-row"><i class="fa-solid fa-lock lr-icon"></i><div class="lr-main"><div class="lr-title">App Lock</div><div class="lr-sub">Protect Moodchat with a PIN</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="section-label">PIN Length</div>
+        <div class="seg" style="margin:4px 20px"><div class="seg-i">4 Digits</div><div class="seg-i active">6 Digits</div></div>
+        <div class="section-label">Lock Timeout</div>
+        <div class="list-row"><div class="lr-main"><div class="lr-title">Auto-lock after</div></div><span style="color:var(--accent-2)">5 Minutes ›</span></div>
+        <div class="list-row"><i class="fa-solid fa-eye-slash lr-icon"></i><div class="lr-main"><div class="lr-title">Hidden Chats</div><div class="lr-sub">Keep sensitive conversations out of main list</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="list-row" onclick="go('pinLock')"><i class="fa-solid fa-key lr-icon"></i><div class="lr-main"><div class="lr-title">Test App Lock</div><div class="lr-sub">Preview the PIN unlock screen</div></div><i class="fa-solid fa-chevron-right" style="color:var(--muted)"></i></div>
+        <div class="list-row" onclick="go('composerAppearance')"><i class="fa-solid fa-wand-magic-sparkles lr-icon"></i><div class="lr-main"><div class="lr-title">Composer Appearance</div><div class="lr-sub">Personalize your message composer</div></div><i class="fa-solid fa-chevron-right" style="color:var(--muted)"></i></div>
+        <div class="info-pill"><i class="fa-solid fa-shield-halved"></i> Your security settings are stored locally and never leave your device.</div>
+      </div>
+    </section>
+
+    <!-- ============ PIN LOCK ============ -->
+    <section class="screen" id="pinLock">
+      <div class="app-header"><span class="back" style="color:var(--accent-2);font-size:15px" onclick="resetPin();go('security')">Cancel</span></div>
+      <div class="pin-lock-icon"><i class="fa-solid fa-lock"></i></div>
+      <div style="text-align:center"><h2 style="margin:0">MOODCHAT</h2><p style="color:var(--muted);font-size:13px">Enter your PIN to unlock</p></div>
+      <div class="pin-dots" id="pinDots"><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span></div>
+      <div class="keypad">
+        <div class="key" onclick="pinPress('1')">1<small></small></div>
+        <div class="key" onclick="pinPress('2')">2<small>ABC</small></div>
+        <div class="key" onclick="pinPress('3')">3<small>DEF</small></div>
+        <div class="key" onclick="pinPress('4')">4<small>GHI</small></div>
+        <div class="key" onclick="pinPress('5')">5<small>JKL</small></div>
+        <div class="key" onclick="pinPress('6')">6<small>MNO</small></div>
+        <div class="key" onclick="pinPress('7')">7<small>PQRS</small></div>
+        <div class="key" onclick="pinPress('8')">8<small>TUV</small></div>
+        <div class="key" onclick="pinPress('9')">9<small>WXYZ</small></div>
+        <div class="key fn"><i class="fa-solid fa-fingerprint" style="color:var(--accent-2)" onclick="go('chats');toast('Unlocked ✅')"></i></div>
+        <div class="key" onclick="pinPress('0')">0</div>
+        <div class="key fn" onclick="pinDelete()"><i class="fa-solid fa-delete-left"></i></div>
+      </div>
+      <div style="text-align:center;padding:14px;color:var(--accent-2);font-size:14px">Forgot PIN?</div>
+    </section>
+
+    <!-- ============ COMPOSER APPEARANCE ============ -->
+    <section class="screen" id="composerAppearance">
+      <div class="app-header"><span class="back" onclick="go('security')"><i class="fa-solid fa-arrow-left"></i></span><h2>Composer Appearance</h2></div>
+      <div class="screen-body">
+        <div class="list-row"><div class="lr-main"><div class="lr-title">Theme Sync</div><div class="lr-sub">Match composer with your app theme</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="section-label">Solid Color</div>
+        <div class="color-row">
+          <div class="color-dot sel" style="background:var(--accent)" onclick="pickComposer(this,'var(--surface)')"></div>
+          <div class="color-dot" style="background:#3b6ef5" onclick="pickComposer(this,'#16223a')"></div>
+          <div class="color-dot" style="background:#8a4ad8" onclick="pickComposer(this,'#241636')"></div>
+          <div class="color-dot" style="background:#e85d9a" onclick="pickComposer(this,'#3a1626')"></div>
+          <div class="color-dot" style="background:#f5963b" onclick="pickComposer(this,'#3a2616')"></div>
+        </div>
+        <div class="section-label">Gradient</div>
+        <div class="color-row">
+          <div class="color-dot" style="background:linear-gradient(135deg,#0c5132,#1faa52)" onclick="pickComposer(this,'linear-gradient(135deg,#0c5132,#1faa52)')"></div>
+          <div class="color-dot" style="background:linear-gradient(135deg,#1a2a6c,#3b6ef5)" onclick="pickComposer(this,'linear-gradient(135deg,#1a2a6c,#3b6ef5)')"></div>
+          <div class="color-dot" style="background:linear-gradient(135deg,#8a2387,#e94057)" onclick="pickComposer(this,'linear-gradient(135deg,#8a2387,#e94057)')"></div>
+          <div class="color-dot" style="background:linear-gradient(135deg,#f7971e,#ffd200)" onclick="pickComposer(this,'linear-gradient(135deg,#f7971e,#ffd200)')"></div>
+        </div>
+        <div class="section-label">Preview</div>
+        <div style="padding:8px 18px"><div class="composer" id="composerPreview" style="border-radius:24px;border:1px solid var(--border)"><div class="c-input" style="border:none"><i class="fa-regular fa-face-smile"></i><input placeholder="Expressing mood, one chat at a time." readonly></div><div class="mic"><i class="fa-solid fa-paper-plane"></i></div></div></div>
+      </div>
+    </section>
+
+    <!-- ============ DOODLE CANVAS ============ -->
+    <section class="screen" id="doodleCanvas">
+      <div class="app-header"><span class="back" onclick="go('conv')"><i class="fa-solid fa-arrow-left"></i></span><h2>Doodle</h2><span class="h-actions"><i class="fa-solid fa-image" onclick="toast('Saved to gallery')"></i></span></div>
+      <canvas id="canvas" style="flex:1;width:100%;touch-action:none;background:#0a0e10"></canvas>
+      <div class="doodle-colors" id="doodleColors">
+        <div class="dcolor sel" style="background:#fff" onclick="setColor(this,'#ffffff')"></div>
+        <div class="dcolor" style="background:#4ff07f" onclick="setColor(this,'#4ff07f')"></div>
+        <div class="dcolor" style="background:#ff5d5d" onclick="setColor(this,'#ff5d5d')"></div>
+        <div class="dcolor" style="background:#ffd23b" onclick="setColor(this,'#ffd23b')"></div>
+        <div class="dcolor" style="background:#3b9bff" onclick="setColor(this,'#3b9bff')"></div>
+        <div class="dcolor" style="background:#ff8fd2" onclick="setColor(this,'#ff8fd2')"></div>
+        <div class="dcolor" style="background:#a26bff" onclick="setColor(this,'#a26bff')"></div>
+      </div>
+      <div class="doodle-tools">
+        <div class="dtool active" onclick="setTool(this,'pen')"><i class="fa-solid fa-pen"></i>Pen</div>
+        <div class="dtool" onclick="setTool(this,'eraser')"><i class="fa-solid fa-eraser"></i>Eraser</div>
+        <div class="dtool" onclick="clearCanvas()"><i class="fa-solid fa-trash"></i>Clear</div>
+        <div class="dtool" onclick="go('conv');toast('Doodle sent ✅')"><i class="fa-solid fa-paper-plane" style="color:var(--accent-2)"></i>Send</div>
+      </div>
+    </section>
+
+    <!-- toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+</div>
+
+<script>
+/* ---------- Navigation ---------- */
+const screens = document.querySelectorAll('.screen');
+function go(id){
+  screens.forEach(s=>s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if(el){el.classList.add('active'); el.querySelector('.screen-body, .chat-bg')?.scrollTo(0,0);}
+  if(id==='otp') startResend();
+  if(id==='statusViewer') runStatusBar();
+  if(id==='gameBoard') initTTT();
+  if(id==='callActive') startCallTimer();
+  else stopCallTimer();
+  if(id==='doodleCanvas') initCanvas();
+}
+
+/* ---------- Toast ---------- */
+let toastT;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+/* ---------- Chat open ---------- */
+const chatData={
+  aarav:{name:'Aarav Mehta',img:'https://i.pravatar.cc/100?img=12'},
+  maya:{name:'Maya P.',img:'https://i.pravatar.cc/100?img=47'},
+  rohan:{name:'Rohan Singh',img:'https://i.pravatar.cc/100?img=33'},
+  neha:{name:'Neha Kapoor',img:'https://i.pravatar.cc/100?img=45'},
+  arjun:{name:'Arjun Dev',img:'https://i.pravatar.cc/100?img=15'}
+};
+function openChat(key){
+  const d=chatData[key]||chatData.aarav;
+  document.getElementById('convName').textContent=d.name;
+  document.getElementById('convAvatar').src=d.img;
+  go('conv');
+}
+function openGroup(){go('group');}
+
+/* ---------- OTP boxes ---------- */
+const otpBoxes=document.querySelectorAll('#otpRow .otp-box');
+otpBoxes.forEach((b,i)=>{
+  b.addEventListener('input',()=>{
+    b.classList.toggle('filled',b.value.length>0);
+    if(b.value && i<otpBoxes.length-1) otpBoxes[i+1].focus();
+  });
+  b.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!b.value&&i>0)otpBoxes[i-1].focus();});
+});
+// prefill demo
+['1','2','3','4','5','6'].forEach((v,i)=>{otpBoxes[i].value=v;otpBoxes[i].classList.add('filled');});
+
+let resendInt;
+function startResend(){
+  clearInterval(resendInt); let s=28;
+  const el=document.getElementById('resendTimer');
+  resendInt=setInterval(()=>{
+    s--; if(s<0){clearInterval(resendInt);el.innerHTML='<span style="color:var(--accent-2);cursor:pointer">Resend now</span>';return;}
+    el.textContent='00:'+String(s).padStart(2,'0');
+  },1000);
+}
+
+/* ---------- Long press menu ---------- */
+function openLP(e){e.preventDefault();document.getElementById('lpOverlay').classList.add('show');}
+let lpDown;
+document.querySelectorAll('.msg.in').forEach(m=>{
+  m.addEventListener('touchstart',()=>{lpDown=setTimeout(()=>openLP({preventDefault(){}}),500);});
+  m.addEventListener('touchend',()=>clearTimeout(lpDown));
+});
+function closeLP(e){if(!e||e.target.id==='lpOverlay'||e.target.closest('.lp-i'))document.getElementById('lpOverlay').classList.remove('show');}
+
+/* ---------- Send message ---------- */
+document.getElementById('sendBtn').addEventListener('click',sendMsg);
+document.getElementById('msgInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendMsg();});
+function sendMsg(){
+  const inp=document.getElementById('msgInput'); const txt=inp.value.trim(); if(!txt)return;
+  const body=document.getElementById('convBody');
+  const typing=document.getElementById('typingPill');
+  const t=new Date();const tm=t.getHours()%12||12;const mm=String(t.getMinutes()).padStart(2,'0');
+  const wrap=document.createElement('div');
+  wrap.innerHTML=`<div class="msg out">${txt.replace(/</g,'&lt;')}<div class="meta">${tm}:${mm} ${t.getHours()>=12?'PM':'AM'} <i class="fa-solid fa-check-double tick"></i></div></div><div style="clear:both"></div>`;
+  body.insertBefore(wrap,typing);
+  inp.value=''; body.scrollTop=body.scrollHeight;
+  // auto reply
+  setTimeout(()=>{
+    const r=document.createElement('div');
+    const replies=['Sounds great! 😄','Haha totally agree 🔥','Let me check and get back 👍','Awesome, thanks for sharing! ❤️','Cool, talk soon!'];
+    r.innerHTML=`<div class="msg in">${replies[Math.floor(Math.random()*replies.length)]}<div class="meta">${tm}:${mm}</div></div><div style="clear:both"></div>`;
+    body.insertBefore(r,typing); body.scrollTop=body.scrollHeight;
+  },1200);
+}
+
+/* ---------- Contacts search ---------- */
+function searchContacts(q){
+  const r=document.getElementById('contactResults'); q=q.trim().toLowerCase();
+  if(!q){r.innerHTML=`<div class="empty"><div class="e-icon"><i class="fa-solid fa-comment-dots"></i></div><h3 style="font-size:16px;color:var(--muted)">Search to find friends</h3><p>Search-only discovery. No feed,<br>just people you know.</p></div>`;return;}
+  if(q.includes('sarah')||q.includes('@sarah')){
+    r.innerHTML=`<div class="section-label">1 result found</div><div class="chat-item" style="background:var(--surface);margin:0 18px;border-radius:14px;border:1px solid var(--border)" onclick="go('friendRequest')"><img class="avatar" src="https://i.pravatar.cc/100?img=20"><div class="ci-main"><div class="ci-name">@sarah.mood</div><div class="ci-msg">+91 98765 43210</div></div><span class="lvl"><i class="fa-solid fa-user-plus"></i> Add</span></div>`;
+  } else {
+    r.innerHTML=`<div class="empty"><div class="e-icon"><i class="fa-solid fa-magnifying-glass"></i></div><h3 style="font-size:18px">No user found</h3><p>We couldn't find any account for<br>"${q.replace(/</g,'')}". Check the username.</p><button class="btn btn-ghost" style="width:auto;padding:10px 24px" onclick="document.getElementById('contactSearch').value='';searchContacts('')">Clear Search</button></div>`;
+  }
+}
+
+/* ---------- Status viewer bar ---------- */
+let svT;
+function runStatusBar(){
+  const bar=document.querySelector('#svActiveBar .fill'); if(!bar)return;
+  bar.style.transition='none'; bar.style.width='0';
+  clearTimeout(svT);
+  setTimeout(()=>{bar.style.transition='width 4s linear';bar.style.width='100%';},50);
+  svT=setTimeout(()=>{if(document.getElementById('statusViewer').classList.contains('active'))go('status');},4200);
+}
+function openStatusViewer(){go('statusViewer');}
+
+/* ---------- Status composer bg ---------- */
+function pickBg(el,bg){document.querySelectorAll('#statusComposer .color-dot').forEach(d=>d.classList.remove('sel'));el.classList.add('sel');document.getElementById('composeCanvas').style.background=bg;}
+
+/* ---------- Calls ---------- */
+let callTimerInt,callSec=0;
+function startAudioCall(name,img){
+  document.getElementById('callName').textContent=name;
+  document.getElementById('callAvatar').src=img;
+  go('callActive');
+}
+function startCallTimer(){callSec=0;clearInterval(callTimerInt);callTimerInt=setInterval(()=>{callSec++;const m=String(Math.floor(callSec/60)).padStart(2,'0');const s=String(callSec%60).padStart(2,'0');document.getElementById('callTimer').textContent=m+':'+s;},1000);}
+function stopCallTimer(){clearInterval(callTimerInt);}
+function endCall(){toast('Call ended');go('calls');}
+
+/* ---------- Game picker ---------- */
+function selectFriend(el,name){
+  document.querySelectorAll('.picker-row').forEach(r=>{r.querySelector('.pick-i').className='far fa-circle pick-i';r.querySelector('.pick-i').style.color='var(--muted)';});
+  const i=el.querySelector('.pick-i'); i.className='fa-solid fa-circle-check pick-i'; i.style.color='var(--accent-2)';
+}
+
+/* ---------- Tic Tac Toe ---------- */
+let tttBoard,tttTurn;
+function initTTT(){
+  tttBoard=Array(9).fill(''); tttTurn='O'; // player is O (green)
+  const b=document.getElementById('tttBoard'); b.innerHTML='';
+  document.getElementById('tttResult').classList.remove('show');
+  document.getElementById('turnYou').textContent='Your Turn';
+  document.getElementById('turnOpp').textContent='';
+  for(let i=0;i<9;i++){const c=document.createElement('div');c.className='ttt-cell';c.onclick=()=>tttMove(i);b.appendChild(c);}
+}
+function tttMove(i){
+  if(tttBoard[i]||tttTurn!=='O'||checkWin(tttBoard))return;
+  place(i,'O'); if(checkEnd())return;
+  // AI move
+  setTimeout(()=>{
+    const empty=tttBoard.map((v,idx)=>v?null:idx).filter(v=>v!==null);
+    if(empty.length){const mv=empty[Math.floor(Math.random()*empty.length)];place(mv,'X');checkEnd();}
+  },500);
+}
+function place(i,mark){
+  tttBoard[i]=mark; const cell=document.getElementById('tttBoard').children[i];
+  cell.textContent=mark; cell.classList.add(mark.toLowerCase());
+  tttTurn=mark==='O'?'X':'O';
+  document.getElementById('turnYou').textContent=tttTurn==='O'?'Your Turn':'';
+  document.getElementById('turnOpp').textContent=tttTurn==='X'?'Their Turn':'';
+}
+function checkWin(bd){
+  const w=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  for(const l of w){if(bd[l[0]]&&bd[l[0]]===bd[l[1]]&&bd[l[1]]===bd[l[2]])return l;}
+  return null;
+}
+function checkEnd(){
+  const win=checkWin(tttBoard);
+  if(win){
+    win.forEach(i=>document.getElementById('tttBoard').children[i].classList.add('win'));
+    const winner=tttBoard[win[0]];
+    document.getElementById('tttResultTitle').textContent=winner==='O'?'You Won! 🎉':'You Lost 😅';
+    document.getElementById('tttResult').querySelector('p').textContent=winner==='O'?'Great game, Aarav!':'Rematch?';
+    document.getElementById('tttResult').classList.add('show');
+    return true;
+  }
+  if(!tttBoard.includes('')){
+    document.getElementById('tttResultTitle').textContent="It's a Draw! 🤝";
+    document.getElementById('tttResult').querySelector('p').textContent='Good game!';
+    document.getElementById('tttResult').classList.add('show');
+    return true;
+  }
+  return false;
+}
+function resetTTT(){initTTT();}
+
+/* ---------- Themes ---------- */
+function selTheme(el){document.querySelectorAll('#themes .theme-card').forEach(t=>t.classList.remove('sel'));el.classList.add('sel');toast(el.querySelector('.tc-name').textContent+' theme applied');}
+
+/* ---------- Composer appearance ---------- */
+function pickComposer(el,bg){document.querySelectorAll('#composerAppearance .color-dot').forEach(d=>d.classList.remove('sel'));el.classList.add('sel');document.getElementById('composerPreview').style.background=bg;}
+
+/* ---------- PIN ---------- */
+let pin='';
+function pinPress(n){
+  if(pin.length>=6)return; pin+=n; renderPin();
+  if(pin.length===6)setTimeout(()=>{toast('Unlocked ✅');resetPin();go('chats');},300);
+}
+function pinDelete(){pin=pin.slice(0,-1);renderPin();}
+function resetPin(){pin='';renderPin();}
+function renderPin(){document.querySelectorAll('#pinDots .pin-dot').forEach((d,i)=>d.classList.toggle('on',i<pin.length));}
+
+/* ---------- Doodle Canvas ---------- */
+let ctx,drawing=false,dColor='#ffffff',dTool='pen',canvasInit=false;
+function initCanvas(){
+  const cv=document.getElementById('canvas');
+  if(!canvasInit){
+    cv.width=cv.offsetWidth; cv.height=cv.offsetHeight;
+    ctx=cv.getContext('2d'); ctx.lineCap='round';ctx.lineJoin='round';
+    const pos=e=>{const r=cv.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top};};
+    const start=e=>{drawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);e.preventDefault?.();};
+    const move=e=>{if(!drawing)return;const p=pos(e);ctx.strokeStyle=dTool==='eraser'?'#0a0e10':dColor;ctx.lineWidth=dTool==='eraser'?22:5;ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault?.();};
+    const end=()=>drawing=false;
+    cv.addEventListener('mousedown',start);cv.addEventListener('mousemove',move);window.addEventListener('mouseup',end);
+    cv.addEventListener('touchstart',start);cv.addEventListener('touchmove',move);cv.addEventListener('touchend',end);
+    canvasInit=true;
+  }
+}
+function setColor(el,c){document.querySelectorAll('#doodleColors .dcolor').forEach(d=>d.classList.remove('sel'));el.classList.add('sel');dColor=c;dTool='pen';document.querySelectorAll('.dtool').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.dtool')[0].classList.add('active');}
+function setTool(el,t){document.querySelectorAll('.dtool').forEach(d=>d.classList.remove('active'));el.classList.add('active');dTool=t;}
+function clearCanvas(){const cv=document.getElementById('canvas');ctx&&ctx.clearRect(0,0,cv.width,cv.height);}
+
+/* typing dots animation */
+setInterval(()=>{const d=document.getElementById('dots');if(d)d.textContent=d.textContent.length>=3?'.':d.textContent+'.';},500);
+</script>
+</body>
+</html>
